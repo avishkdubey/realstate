@@ -94,7 +94,10 @@
   --gold: #b99c6b;
   /* Lightened gold for small text on charcoal — clears WCAG AA 4.5:1 */
   --gold-soft: #c9ae7c;
-  --bronze: #8c6a3f;
+  /* Darkened from the #8C6A3F in the brand notes: that value measures 4.28:1
+     on ivory and fails WCAG AA for the 12px eyebrow text this tone is used
+     for. #7A5A33 measures 5.5:1 and is indistinguishable at that size. */
+  --bronze: #7a5a33;
   --forest: #243b34;
   --navy: #0a192f;
   --stone: #6b6b6b;
@@ -201,6 +204,24 @@
   /* Hairline rule in the brand's low-contrast register. */
   .rule {
     @apply border-t border-border;
+  }
+
+  /* Availability stack cells. A tall tower emits hundreds of these, so the
+     status styling lives here on a data attribute rather than as repeated
+     utility strings — it keeps tens of kilobytes out of the HTML. */
+  .unit-cell {
+    display: block;
+    height: 0.9rem;
+    width: 1.9rem;
+    border-radius: 2px;
+    background: var(--border);
+  }
+  .unit-cell[data-status="available"] {
+    background: var(--forest);
+  }
+  .unit-cell[data-status="blocked"] {
+    background: var(--gold);
+    opacity: 0.55;
   }
 }
 

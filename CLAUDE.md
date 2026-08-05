@@ -192,6 +192,8 @@ public/fonts  public/placeholders
 - **10% accent:** muted metallics only — champagne/muted gold `#D4AF37`, soft bronze `#CD7F32`.
   Never saturated primaries, neon, or chaotic gradients (they read as *discount*).
 - **Gold-on-charcoal small text must pass WCAG AA 4.5:1** — lighten to `#C9AE7C`+ if needed.
+- **Bronze-on-ivory small text likewise.** Measured: `#8C6A3F` on `#F5F1E8` is 4.28:1 and fails.
+  The implementation ships `#7A5A33` (5.5:1) as `--bronze`; use it for eyebrows and captions.
 
 ### Typography
 - **Max two families.** Display serif = **Fraunces** (variable, Google Fonts) or Playfair Display /

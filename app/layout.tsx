@@ -15,11 +15,14 @@ import "./globals.css";
 
 /* Two families, no more. Both self-hosted through next/font and subset, so
    there is no render-blocking request to a font CDN. */
+/* Only the optical-size axis is requested. Fraunces also ships SOFT and WONK,
+   and carrying all three costs ~118KB on the critical path for two decorative
+   axes this design never varies. */
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
-  axes: ["SOFT", "WONK", "opsz"],
+  axes: ["opsz"],
 });
 
 const manrope = Manrope({
@@ -28,12 +31,14 @@ const manrope = Manrope({
   display: "swap",
 });
 
-/* Loaded but not applied globally — scoped to :lang(gu) in globals.css so the
-   Gujarati glyphs cost nothing until a translated page needs them. */
+/* Scoped to :lang(gu) in globals.css, so `preload: false` is essential —
+   otherwise ~110KB of Gujarati glyphs is fetched on the critical path of
+   every English page that will never render one of them. */
 const notoGujarati = Noto_Sans_Gujarati({
   variable: "--font-noto-gujarati",
   subsets: ["gujarati"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
