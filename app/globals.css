@@ -1,26 +1,220 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/* ------------------------------------------------------------------------- *
+ * Design tokens — "quiet luxury"                                            *
+ * See CLAUDE.md §6. Palette obeys 60-30-10: ground / structural / accent.    *
+ * ------------------------------------------------------------------------- */
 
 @theme inline {
+  /* --- Brand palette (raw) ------------------------------------------------ */
+  --color-charcoal: var(--charcoal);
+  --color-charcoal-2: var(--charcoal-2);
+  --color-ivory: var(--ivory);
+  --color-cream: var(--cream);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-bronze: var(--bronze);
+  --color-forest: var(--forest);
+  --color-navy: var(--navy);
+  --color-stone: var(--stone);
+  --color-stone-2: var(--stone-2);
+
+  /* --- shadcn semantic tokens --------------------------------------------- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* --- Typography ---------------------------------------------------------- */
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-manrope);
+  --font-gujarati: var(--font-noto-gujarati);
+
+  /* 1.25 modular scale — 12 / 14 / 16 / 20 / 25 / 31 / 39 / 49 / 61 */
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.5;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lead: 1.25rem;
+  --text-lead--line-height: 1.5;
+  --text-h5: 1.5625rem;
+  --text-h5--line-height: 1.2;
+  --text-h4: 1.9375rem;
+  --text-h4--line-height: 1.15;
+  --text-h3: 2.4375rem;
+  --text-h3--line-height: 1.1;
+  --text-h2: 3.0625rem;
+  --text-h2--line-height: 1.1;
+  --text-h1: 3.8125rem;
+  --text-h1--line-height: 1.05;
+
+  /* --- Layout -------------------------------------------------------------- */
+  --container-page: 90rem; /* 1440px — max content width */
+
+  /* --- Radius: restrained 2–8px ------------------------------------------- */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+
+  /* --- Motion -------------------------------------------------------------- */
+  --ease-entrance: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-transition: cubic-bezier(0.65, 0, 0.35, 1);
+  --animate-duration-micro: 180ms;
+  --animate-duration-ui: 300ms;
+  --animate-duration-reveal: 500ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Raw palette */
+  --charcoal: #141414;
+  --charcoal-2: #1a1a1a;
+  --ivory: #f5f1e8;
+  --cream: #ede7da;
+  --gold: #b99c6b;
+  /* Lightened gold for small text on charcoal — clears WCAG AA 4.5:1 */
+  --gold-soft: #c9ae7c;
+  --bronze: #8c6a3f;
+  --forest: #243b34;
+  --navy: #0a192f;
+  --stone: #6b6b6b;
+  --stone-2: #9a9a9a;
+
+  /* Semantic — light is the default ground (ivory) */
+  --background: var(--ivory);
+  --foreground: var(--charcoal);
+  --card: #faf8f2;
+  --card-foreground: var(--charcoal);
+  --popover: #faf8f2;
+  --popover-foreground: var(--charcoal);
+  --primary: var(--charcoal);
+  --primary-foreground: var(--ivory);
+  --secondary: var(--cream);
+  --secondary-foreground: var(--charcoal);
+  --muted: var(--cream);
+  --muted-foreground: var(--stone);
+  --accent: var(--gold);
+  --accent-foreground: var(--charcoal);
+  --destructive: #8f2f2f;
+  --border: #ddd5c5;
+  --input: #ddd5c5;
+  --ring: var(--bronze);
+  --radius: 0.25rem;
+}
+
+.dark {
+  --background: var(--charcoal);
+  --foreground: var(--ivory);
+  --card: var(--charcoal-2);
+  --card-foreground: var(--ivory);
+  --popover: var(--charcoal-2);
+  --popover-foreground: var(--ivory);
+  --primary: var(--ivory);
+  --primary-foreground: var(--charcoal);
+  --secondary: #242424;
+  --secondary-foreground: var(--ivory);
+  --muted: #242424;
+  --muted-foreground: var(--stone-2);
+  /* Gold on charcoal must use the lightened tone for contrast */
+  --accent: var(--gold-soft);
+  --accent-foreground: var(--charcoal);
+  --destructive: #c96a6a;
+  --border: rgb(245 241 232 / 12%);
+  --input: rgb(245 241 232 / 16%);
+  --ring: var(--gold-soft);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    /* Lenis needs this off; we re-enable natively when motion is reduced. */
+    scroll-behavior: auto;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    @apply font-display;
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+  :lang(gu) {
+    font-family: var(--font-gujarati), var(--font-manrope), sans-serif;
+  }
+  ::selection {
+    background: var(--gold);
+    color: var(--charcoal);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Small uppercase eyebrows / nav labels — generous tracking reads expensive. */
+  .eyebrow {
+    @apply font-sans text-caption uppercase;
+    letter-spacing: 0.18em;
+  }
+
+  /* Page gutter + max width. Whitespace is the luxury: see CLAUDE.md §6. */
+  .container-page {
+    @apply mx-auto w-full px-6 md:px-10 lg:px-16;
+    max-width: var(--container-page);
+  }
+
+  /* Standard vertical section rhythm — deliberately 2–3× template defaults. */
+  .section {
+    @apply py-24 md:py-32;
+  }
+
+  /* Editorial measure: 50–75 characters. */
+  .measure {
+    max-width: 68ch;
+  }
+
+  /* Hairline rule in the brand's low-contrast register. */
+  .rule {
+    @apply border-t border-border;
+  }
+}
+
+/* Users who ask for less motion get none of the choreography. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
