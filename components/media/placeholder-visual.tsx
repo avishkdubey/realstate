@@ -40,14 +40,9 @@ export function PlaceholderVisual({
           background: `linear-gradient(${angle}deg, #141414 0%, #2a2622 ${40 + shift}%, #4a4038 78%, #6f5c45 100%)`,
         }}
       />
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(90deg, #f5f1e8 0 1px, transparent 1px 64px), repeating-linear-gradient(0deg, #f5f1e8 0 1px, transparent 1px 64px)",
-        }}
-      />
+      {/* A repeating-gradient grid overlay used to sit here. It read well but
+          cost real paint time once a page carried a dozen of these, so the
+          texture now comes from the base gradient alone. */}
       <p className="text-ivory/25 font-display relative p-6 text-h5 leading-none">
         {label}
       </p>

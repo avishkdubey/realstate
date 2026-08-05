@@ -225,6 +225,17 @@
   }
 }
 
+/* The WebGL hero fades in only once it has decided the device can afford it,
+   so it never competes with the LCP paint. */
+@keyframes fade-in-canvas {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Users who ask for less motion get none of the choreography. */
 @media (prefers-reduced-motion: reduce) {
   html {

@@ -66,6 +66,7 @@ export const projects: Project[] = [
     priceOnRequest: false,
     possession: "December 2027",
     reraNumber: DEMO_RERA,
+    brochureUrl: "/brochures/demo-brochure.pdf",
     vastuFacing: "East",
     summary:
       "Twenty-two floors on the city's primary corporate artery, planned so every apartment holds a corner and an east light.",
@@ -150,9 +151,17 @@ export const projects: Project[] = [
       },
     ],
     progress: [
-      { date: "2026-06-30", caption: "Tower A — 14th floor slab cast" },
-      { date: "2026-03-31", caption: "Tower A — 9th floor slab cast; Tower B plinth complete" },
-      { date: "2025-12-20", caption: "Excavation and raft foundation complete across both towers" },
+      { date: "2026-06-30", caption: "Tower A — 14th floor slab cast", stage: "structure" },
+      {
+        date: "2026-03-31",
+        caption: "Tower A — 9th floor slab cast; Tower B plinth complete",
+        stage: "structure",
+      },
+      {
+        date: "2025-12-20",
+        caption: "Excavation and raft foundation complete across both towers",
+        stage: "foundation",
+      },
     ],
   },
 
@@ -172,6 +181,7 @@ export const projects: Project[] = [
     priceOnRequest: false,
     possession: "June 2028",
     reraNumber: DEMO_RERA,
+    brochureUrl: "/brochures/demo-brochure.pdf",
     vastuFacing: "North-East",
     summary:
       "Forty-eight independent villas on a low-density plot, each with its own courtyard and a garden wall you can actually plant against.",
@@ -243,9 +253,13 @@ export const projects: Project[] = [
       },
     ],
     progress: [
-      { date: "2026-07-15", caption: "Cluster 1 — superstructure complete on 8 villas" },
-      { date: "2026-04-10", caption: "Internal roads and stormwater lines laid" },
-      { date: "2026-01-05", caption: "Site levelling and boundary wall complete" },
+      {
+        date: "2026-07-15",
+        caption: "Cluster 1 — superstructure complete on 8 villas",
+        stage: "structure",
+      },
+      { date: "2026-04-10", caption: "Internal roads and stormwater lines laid", stage: "foundation" },
+      { date: "2026-01-05", caption: "Site levelling and boundary wall complete", stage: "excavation" },
     ],
   },
 
@@ -264,6 +278,7 @@ export const projects: Project[] = [
     startingPrice: 8_900_000,
     priceOnRequest: false,
     reraNumber: DEMO_RERA,
+    brochureUrl: "/brochures/demo-brochure.pdf",
     vastuFacing: "North",
     summary:
       "Handed over in 2023 and fully occupied. A working example of what our drawings turn into — and of what we hand over on time.",
@@ -306,7 +321,13 @@ export const projects: Project[] = [
         a: "Yes. We arrange walkthroughs of delivered projects for buyers considering our ongoing ones. It is the most useful hour you can spend with us.",
       },
     ],
-    progress: [{ date: "2023-08-14", caption: "Handover complete — occupancy certificate received" }],
+    progress: [
+      {
+        date: "2023-08-14",
+        caption: "Handover complete — occupancy certificate received",
+        stage: "handover",
+      },
+    ],
   },
 
   {
@@ -323,6 +344,7 @@ export const projects: Project[] = [
     carpetAreaMax: 3600,
     priceOnRequest: true,
     reraNumber: DEMO_RERA,
+    brochureUrl: "/brochures/demo-brochure.pdf",
     vastuFacing: "East",
     summary:
       "Eighteen apartments and two penthouses on the city's most-watched restaurant street. Delivered 2021; resale only.",
@@ -360,7 +382,7 @@ export const projects: Project[] = [
         a: "The project is sold out and delivered. Any price we quoted would be a resale figure set by the owner, not by us, so we would rather connect you directly.",
       },
     ],
-    progress: [{ date: "2021-11-02", caption: "Handover complete" }],
+    progress: [{ date: "2021-11-02", caption: "Handover complete", stage: "handover" }],
   },
 
   {

@@ -34,84 +34,86 @@ Two fields deserve care:
 Set `NEXT_PUBLIC_SITE_URL` in the environment to control canonical URLs,
 `metadataBase` and Open Graph URLs. It falls back to `https://example.com`.
 
-## What exists today (Phases 0–1)
+## What exists today
 
-**Phase 1 — the demo-ready MVP**
+All five build phases from `CLAUDE.md` §16 are implemented.
 
-- **Data layer** — `lib/data.ts` is the seam. It reads from `lib/placeholders/`
-  today and every function is async, returning the shapes a Sanity query would.
-  Wiring the CMS means rewriting that one file: no component changes.
-  Six demo projects, twelve amenities, three testimonials.
-- **Projects listing** — filters for status, micro-market, configuration,
-  budget and Vastu facing, all synced to the query string so a filtered view is
-  shareable, bookmarkable and crawlable.
-- **Project detail** — prerendered per slug. Hero facts, USPs, unit
-  availability (table plus a per-floor stack), amenities, specifications, dated
-  construction progress, FAQs, enquiry form, WhatsApp CTA and the statutory
-  RERA block.
-- **Enquiry flow** — `EnquiryForm` (react-hook-form + Zod) → `/api/enquiry` →
-  Resend, with a honeypot and a DPDP consent gate. Email is best-effort: with
-  no `RESEND_API_KEY` the lead is logged and the request still succeeds, so the
-  demo works with zero credentials. Success hands off to WhatsApp.
-- **Compliance pages** — RERA disclosure (registration table, QR slots,
-  disclaimers) and a privacy policy written to the DPDP Act.
-- **SEO** — `sitemap.ts`, `robots.ts`, and JSON-LD on every project page:
-  `Apartment`/`SingleFamilyResidence` with a nested `Offer`, plus
-  `BreadcrumbList` and `FAQPage`.
+**Content & data**
+- `lib/data.ts` is the CMS seam. It reads from `lib/placeholders/` today and every
+  function is async, returning the shapes a Sanity query would. Wiring the CMS
+  means rewriting that one file — no component changes.
+- Six demo projects, six micro-markets, twelve amenities, three testimonials,
+  three long-form insight posts.
 
-**Phase 0 — the shell**
+**Pages** — home, projects listing (URL-synced filters), project detail,
+locations index + six corridor guides, amenities, gallery, about/legacy,
+NRI corner, insights + three articles, contact, channel partners, careers,
+RERA disclosure, privacy, terms, 404.
 
-- **Design tokens** — `app/globals.css`. Palette, 1.25 type scale, spacing,
-  radius, motion easings, plus the `.eyebrow`, `.container-page`, `.section`
-  and `.measure` component classes.
-- **Fonts** — Fraunces (display) and Manrope (body), self-hosted via
-  `next/font`. Noto Sans Gujarati is loaded but scoped to `:lang(gu)`, so it
-  costs nothing until a translated page needs it.
-- **Layout chrome** — header (transparent over the home hero, solid everywhere
-  else), footer with the statutory RERA block, sticky mobile action bar,
-  desktop WhatsApp bubble, skip link.
-- **Motion** — `LenisProvider` (off for reduced motion and coarse pointers)
-  and `ReducedMotionProvider`, plus the `FadeInView` reveal primitive.
-- **SEO groundwork** — `metadataBase`, title template, canonicals, and a
-  site-wide `RealEstateAgent` JSON-LD graph from `lib/structured-data.ts`.
-- **Route stubs** for every navigation destination, so typed routes compile
-  and the shell is navigable end to end.
+**Tools**
+- Floor-plan viewer: schematic SVG per configuration, wheel/drag zoom and pan,
+  keyboard controls (`+`, `-`, `0`, arrows), north compass rotated to the unit's
+  facing, room dimensions derived from real carpet area.
+- EMI calculator: reducing-balance amortisation, four live inputs.
+- Cost sheet: agreement value, GST, Gujarat stamp duty, registration,
+  maintenance advance — server-rendered so it stays crawlable.
+- Brochure: ungated download plus an optional name-and-phone gate.
+- Gallery lightbox: Embla, keyboard-navigable, Escape to close.
 
-Placeholder copy is marked as such and carries no RERA registration.
+**3D** — WebGL hero, clickable master-plan massing, and a 360° panorama, all
+gated behind `lib/webgl.ts` (real context probe, pointer type, viewport,
+cores/memory, reduced-motion) and wrapped in `components/webgl-boundary.tsx`.
+Every one sits over content that already works without it.
+
+**SEO** — sitemap (29 URLs), robots, `/llms.txt` generated from live data,
+per-project OG images via `next/og`, and JSON-LD throughout:
+`RealEstateAgent` site-wide, `Apartment`/`SingleFamilyResidence` + `Offer`,
+`Place`, `Article`, `BreadcrumbList` and `FAQPage`.
 
 ## Measured performance
 
-Production build, Lighthouse, on a developer laptop (not CI — expect ±6 points
-of run-to-run variance):
+Production build, Lighthouse mobile, on a developer laptop — **not CI**. Expect
+±5 points of run-to-run variance; stop every dev server first, or scores drop
+by 15.
 
-| Page | Mobile perf | A11y | Best practices | LCP | CLS |
+| Page | Perf | A11y | Best practices | LCP | CLS |
 |---|---|---|---|---|---|
-| `/` | 93 | 100 | 100 | 3.2s | 0 |
-| `/projects` | 93 | 100 | 100 | 3.0s | 0 |
-| `/projects/[slug]` | 83–89 | 100 | 100 | 3.2s | 0 |
-| `/contact` | 92 | 100 | 100 | 2.7s | 0 |
-| `/rera-disclosure` | 95 | 100 | 100 | 2.8s | 0 |
+| `/` | 95 | 100 | 100 | 2.9s | 0 |
+| `/projects` | 98 | 100 | 100 | 2.1s | 0 |
+| `/projects/[slug]` | 86–90 | 100 | 100 | 3.0s | 0 |
+| `/locations/[slug]` | 95 | 100 | 100 | 2.9s | 0 |
+| `/amenities` | 97 | 100 | 100 | 2.6s | 0 |
+| `/gallery` | 90 | 100 | 100 | 2.8s | 0 |
+| `/about` | 90 | 100 | 100 | 2.9s | 0 |
 
 Desktop is 100 across performance, accessibility and best practices.
+Accessibility is 100 on every page measured.
 
-Two gaps against the `CLAUDE.md` §15 targets, both open:
+**Open against the §15 targets:**
+- `/projects/[slug]` straddles the mobile ≥90 gate (86–90 across runs). It is by
+  far the heaviest page — ~142KB of HTML and eight interactive blocks. Every one
+  of those blocks is already dynamically imported.
+- LCP runs 2.1–3.0s against a ≤2.5s target on the heavier pages. The LCP element
+  is hero body text and the delay is the webfont swap; `size-adjust` fallback
+  tuning is the next lever.
 
-- **`/projects/[slug]` sits below the mobile ≥90 gate.** It is the heaviest
-  page — ~105KB of HTML, driven by the per-floor availability stacks. Phase 3
-  replaces that view with the 3D master plan and should retire most of it.
-- **LCP is 2.7–3.2s against a ≤2.5s target.** The LCP element is hero body
-  text; the delay is the webfont swap. Worth revisiting with `size-adjust`
-  fallback tuning before launch.
+Lighthouse reports SEO as 0 under Node 20.14 because its `canonical` audit calls
+`URL.parse` (Node 22+). Every individual SEO audit passes — upgrade Node for a
+real score.
 
-Lighthouse's SEO category reports 0 under Node 20.14 because its `canonical`
-audit calls `URL.parse` (Node 22+). Every individual SEO audit passes; upgrade
-Node to get a real score.
+## Three deliberate stack deviations
 
-## Adding a project
+`CLAUDE.md` §4 specifies MapLibre, Pannellum and Framer Motion. None are used,
+and §4 records why:
 
-Edit `lib/placeholders/projects.ts`. Once Sanity is wired (see the data-layer
-note above), projects will be authored at `/studio` instead and this section
-will describe the fields.
+- **MapLibre → hand-drawn SVG.** ~200KB gzip and a keyed tile provider, versus
+  ~3KB, no key and a map that matches the brand.
+- **Pannellum → Three.js sphere.** Three was already in the bundle; a second
+  renderer bought nothing.
+- **Framer Motion → IntersectionObserver + CSS.** This one was measured, not
+  assumed: a dozen `motion.div` instances per page cost 150–300ms of blocking
+  time. Removing it moved amenities from 74 to 97 and the project page from 65
+  to 88.
 
 ## Conventions
 

@@ -30,6 +30,8 @@ export type Unit = {
   status: UnitStatus;
   /** Absolute rupees. Omitted when the project is price-on-request. */
   price?: number;
+  /** Keys a layout in `lib/floor-plans.ts`. Real drawings replace these. */
+  floorPlanId?: string;
 };
 
 export type Tower = {
@@ -76,8 +78,50 @@ export type Project = {
   amenityIds: string[];
   specifications: { group: string; items: string[] }[];
   faqs: { q: string; a: string }[];
-  /** Dated construction updates. Built out with real photography in Phase 2. */
-  progress: { date: string; caption: string }[];
+  /**
+   * Dated construction updates, newest first. `stage` drives the schematic
+   * visual until real site photography exists.
+   */
+  progress: {
+    date: string;
+    caption: string;
+    stage?: "excavation" | "foundation" | "structure" | "finishing" | "handover";
+  }[];
+  /** Path to the downloadable brochure. Demo builds point at a marked stand-in. */
+  brochureUrl?: string;
+};
+
+/**
+ * A micro-market. These pages carry the local-SEO weight — "3 BHK flats in
+ * Bopal Ahmedabad" is the query, and a neighbourhood guide is the answer
+ * (CLAUDE.md §11).
+ */
+export type Location = {
+  id: string;
+  slug: string;
+  /** Must match `Project.microMarket` exactly — it is the join key. */
+  name: string;
+  tagline: string;
+  description: string;
+  geo: { lat: number; lng: number };
+  /**
+   * Directional ₹/sq ft band from the CLAUDE.md §1 table. Sources disagree
+   * (see §17) — verify against GujRERA and live listings before publishing.
+   */
+  priceRange: { min: number; max: number };
+  /** Percentage appreciation over the stated window, or null where unknown. */
+  priceTrend: { window: string; changePercent: number } | null;
+  phase: string;
+  buyerProfile: string;
+  driveTimes: { place: string; minutes: number }[];
+  landmarks: {
+    name: string;
+    type: "school" | "hospital" | "temple" | "retail" | "transit" | "work";
+    distanceKm: number;
+  }[];
+  /** Long-term infrastructure context. Never presented as a commitment. */
+  catalysts: string[];
+  faqs: { q: string; a: string }[];
 };
 
 export type Testimonial = {

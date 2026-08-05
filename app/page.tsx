@@ -1,8 +1,18 @@
 import Link from "next/link";
 
+import { HeroCanvas } from "@/components/hero/hero-canvas";
+import { CorridorMap } from "@/components/locations/corridor-map";
 import { FadeInView } from "@/components/motion/fade-in-view";
+import { RevealLine, ScrollReveal } from "@/components/motion/scroll-reveal";
 import { ProjectCard } from "@/components/projects/project-card";
-import { getProjects } from "@/lib/data";
+import { TestimonialCarousel } from "@/components/testimonials/testimonial-carousel";
+import {
+  getLocations,
+  getLocationsWithProjects,
+  getPosts,
+  getProjects,
+  getTestimonials,
+} from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
 import { whatsappLink } from "@/lib/whatsapp";
 
@@ -15,7 +25,19 @@ import { whatsappLink } from "@/lib/whatsapp";
  * canvas will mount behind this markup, never in place of it.
  */
 export default async function HomePage() {
-  const projects = await getProjects();
+  const [projects, locations, withProjects, testimonials, posts] =
+    await Promise.all([
+      getProjects(),
+      getLocations(),
+      getLocationsWithProjects(),
+      getTestimonials(),
+      getPosts(),
+    ]);
+
+  const projectCounts = Object.fromEntries(
+    withProjects.map(({ location, projectCount }) => [location.slug, projectCount]),
+  );
+  const latestPosts = posts.slice(0, 3);
   const delivered = projects.filter((p) => p.status === "completed").length;
   const featured = [
     ...projects.filter((p) => p.status === "ongoing"),
@@ -34,9 +56,11 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero. The R3F canvas slots in behind this block in Phase 3. */}
-      <section className="bg-charcoal text-ivory relative flex min-h-[92svh] items-end">
-        <div className="container-page pb-24 pt-40">
+      {/* Hero. The WebGL scene mounts behind this markup, never in place of
+          it — the headline and CTAs below are always in the server HTML. */}
+      <section className="bg-charcoal text-ivory relative flex min-h-[92svh] items-end overflow-hidden">
+        <HeroCanvas />
+        <div className="container-page relative pb-24 pt-40">
           <p className="eyebrow text-gold-soft">
             Ahmedabad · Since {siteConfig.foundedYear}
           </p>
@@ -83,12 +107,13 @@ export default async function HomePage() {
       {/* Featured work. Ongoing first — that is what a buyer can act on. */}
       <section className="section">
         <div className="container-page">
-          <FadeInView>
+          <ScrollReveal>
             <div className="flex flex-wrap items-end justify-between gap-6">
               <div>
                 <p className="eyebrow text-bronze">Currently building</p>
                 <h2 className="measure mt-6 text-h3">
-                  Four addresses in west Ahmedabad, and two more coming.
+                  <RevealLine>Four addresses in west Ahmedabad,</RevealLine>
+                  <RevealLine>and two more coming.</RevealLine>
                 </h2>
               </div>
               <Link
@@ -98,7 +123,7 @@ export default async function HomePage() {
                 All projects
               </Link>
             </div>
-          </FadeInView>
+          </ScrollReveal>
 
           <div className="mt-16 grid gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((project, index) => (
@@ -130,6 +155,104 @@ export default async function HomePage() {
           </FadeInView>
         </div>
       </section>
+
+      {/* Micro-market teaser */}
+      <section className="section">
+        <div className="container-page grid gap-16 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+          <FadeInView>
+            <CorridorMap locations={locations} projectCounts={projectCounts} />
+          </FadeInView>
+          <FadeInView delay={0.05}>
+            <p className="eyebrow text-bronze">Where we build</p>
+            <h2 className="measure mt-6 text-h3">
+              Six corridors, west and north of the river.
+            </h2>
+            <p className="measure text-muted-foreground mt-6">
+              Each has a guide covering prices, drive times, what has already
+              arrived and what is still missing.
+            </p>
+            <Link
+              href="/locations"
+              className="eyebrow text-foreground mt-8 inline-block border-b border-current pb-1"
+            >
+              Read the location guides
+            </Link>
+          </FadeInView>
+        </div>
+      </section>
+
+      {/* NRI strip */}
+      <section className="bg-charcoal text-ivory">
+        <div className="container-page grid gap-10 py-20 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div>
+            <p className="eyebrow text-gold-soft">Buying from abroad</p>
+            <h2 className="measure mt-6 text-h4">
+              A good share of our buyers have never stood in the building.
+            </h2>
+            <p className="measure text-stone-2 mt-4">
+              Power of attorney, NRE and NRO accounts, FEMA, remote booking and
+              callbacks in your timezone — written down rather than explained on
+              a call.
+            </p>
+          </div>
+          <div className="lg:justify-self-end">
+            <Link
+              href="/nri-corner"
+              className="eyebrow bg-gold text-charcoal inline-block rounded-sm px-8 py-4"
+            >
+              NRI Corner
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="section">
+          <div className="container-page">
+            <p className="eyebrow text-bronze">From people who bought</p>
+            <div className="mt-12">
+              <TestimonialCarousel items={testimonials} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Insights teaser */}
+      {latestPosts.length > 0 && (
+        <section className="section bg-cream/50">
+          <div className="container-page">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <p className="eyebrow text-bronze">Insights</p>
+              <Link
+                href="/insights"
+                className="eyebrow text-foreground border-b border-current pb-1"
+              >
+                All insights
+              </Link>
+            </div>
+            <ul className="mt-12 grid gap-10 md:grid-cols-3">
+              {latestPosts.map((post, index) => (
+                <li key={post.slug}>
+                  <FadeInView delay={index * 0.05}>
+                    <Link href={`/insights/${post.slug}`} className="group block">
+                      <span className="eyebrow text-muted-foreground">
+                        {post.category}
+                      </span>
+                      <span className="mt-3 block text-h5 group-hover:text-bronze transition-colors">
+                        {post.title}
+                      </span>
+                      <span className="text-small text-muted-foreground mt-3 block">
+                        {post.excerpt}
+                      </span>
+                    </Link>
+                  </FadeInView>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="container-page">

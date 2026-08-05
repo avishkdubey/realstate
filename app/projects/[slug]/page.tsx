@@ -3,18 +3,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DeferredEnquiryForm } from "@/components/forms/deferred-enquiry-form";
+import { DeferredEmiCalculator } from "@/components/finance/deferred-emi-calculator";
 import { PlaceholderVisual } from "@/components/media/placeholder-visual";
 import { FadeInView } from "@/components/motion/fade-in-view";
+import { DeferredBrochure } from "@/components/projects/deferred-brochure";
+import { CostSheet } from "@/components/projects/cost-sheet";
+import { DeferredFloorPlans } from "@/components/projects/deferred-floor-plans";
+import { MasterPlan } from "@/components/projects/master-plan";
+import { PanoTour } from "@/components/projects/pano-tour";
+import { ProgressTimeline } from "@/components/projects/progress-timeline";
 import { ReraBlock } from "@/components/projects/rera-block";
 import { UnitMatrix } from "@/components/projects/unit-matrix";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getAmenities, getProject, getProjectSlugs } from "@/lib/data";
-import {
-  countAvailable,
-  formatMonth,
-  formatStatus,
-  priceLabel,
-} from "@/lib/format";
+import { countAvailable, formatStatus, priceLabel } from "@/lib/format";
 import {
   breadcrumbSchema,
   faqSchema,
@@ -57,6 +59,22 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
   const amenities = await getAmenities(project.amenityIds);
   const available = countAvailable(project);
+
+  // One plan per distinct configuration, taken from the first matching unit.
+  const planOptions = project.bhkOptions.map((bhk) => {
+    const unit = project.towers
+      .flatMap((tower) => tower.units)
+      .find((candidate) => candidate.bhk === bhk);
+    return {
+      bhk,
+      carpetArea: unit?.carpetArea ?? project.carpetAreaMin,
+      facing: unit?.facing ?? project.vastuFacing,
+    };
+  });
+
+  // Price-on-request projects have no number to build a cost sheet from, and
+  // inventing one would be worse than omitting the section.
+  const basePrice = project.priceOnRequest ? undefined : project.startingPrice;
 
   return (
     <>
@@ -139,16 +157,77 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
               </h2>
             </div>
             <p className="measure text-small text-muted-foreground">
-              Live as of the last sales-desk update. An interactive master plan
-              replaces this view in a later release; the numbers will be the same.
+              Live as of the last sales-desk update. The massing model above and
+              the table below carry the same numbers — sold units included,
+              because that is what makes the available ones believable.
             </p>
           </div>
 
           <div className="mt-16">
+            {/* WebGL massing on capable devices; the table below is the real
+                interface and carries the same numbers either way. */}
+            <MasterPlan towers={project.towers} />
             <UnitMatrix towers={project.towers} />
           </div>
         </div>
       </section>
+
+      {/* Floor plans */}
+      <section className="section">
+        <div className="container-page">
+          <p className="eyebrow text-bronze">Floor plans</p>
+          <h2 className="measure mt-6 text-h4">
+            Every layout, with its facing labelled.
+          </h2>
+          <p className="measure text-muted-foreground mt-6">
+            Direction matters here — east and north-east homes carry a resale
+            premium — so it is printed on the plan rather than left for you to
+            work out from the site map.
+          </p>
+
+          <div className="mt-14">
+            <DeferredFloorPlans options={planOptions} />
+          </div>
+        </div>
+      </section>
+
+      {/* 360° view. Matters most to buyers who will never stand in the
+          building before deciding — which describes most NRI purchases. */}
+      <section className="section bg-cream/50">
+        <div className="container-page">
+          <p className="eyebrow text-bronze">360° view</p>
+          <h2 className="measure mt-6 text-h4">
+            Look around before you fly in.
+          </h2>
+          <div className="mt-14 max-w-4xl">
+            <PanoTour
+              src="/panoramas/demo-interior.png"
+              label={`${project.name} — living area`}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Money */}
+      {basePrice && (
+        <section className="section bg-cream/50">
+          <div className="container-page">
+            <p className="eyebrow text-bronze">The money</p>
+            <h2 className="measure mt-6 text-h4">
+              What you would pay, and what you would pay monthly.
+            </h2>
+
+            <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:items-start">
+              <CostSheet
+                project={project}
+                basePrice={basePrice}
+                carpetArea={project.carpetAreaMin}
+              />
+              <DeferredEmiCalculator startingPrice={basePrice} />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Amenities */}
       {amenities.length > 0 && (
@@ -200,21 +279,12 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
             <h2 className="measure mt-6 text-h4">
               Dated updates, published whether or not they are flattering.
             </h2>
-            <ol className="mt-12 max-w-3xl">
-              {project.progress.map((entry) => (
-                <li
-                  key={entry.date}
-                  className="grid gap-2 border-t border-border py-6 sm:grid-cols-[200px_1fr]"
-                >
-                  <span className="eyebrow text-muted-foreground">
-                    {formatMonth(entry.date)}
-                  </span>
-                  <span className="text-base">{entry.caption}</span>
-                </li>
-              ))}
-            </ol>
+            <div className="mt-12 max-w-4xl">
+              <ProgressTimeline entries={project.progress} />
+            </div>
             <p className="text-caption text-muted-foreground mt-6">
-              Photography accompanies these entries from the next release.
+              Progress indicators are schematic. Site photography replaces them
+              once the client&apos;s monthly shoot is in place.
             </p>
           </div>
         </section>
@@ -263,11 +333,14 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
             </a>
           </div>
 
-          <DeferredEnquiryForm
-            projectSlug={project.slug}
-            projectName={project.name}
-            source="project"
-          />
+          <div className="space-y-10">
+            <DeferredBrochure project={project} />
+            <DeferredEnquiryForm
+              projectSlug={project.slug}
+              projectName={project.name}
+              source="project"
+            />
+          </div>
         </div>
       </section>
 

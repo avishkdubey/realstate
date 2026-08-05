@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { getProjects } from "@/lib/data";
+import { getLocations, getPosts, getProjects } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
 
 /**
@@ -28,7 +28,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/terms", priority: 0.2 },
   ];
 
-  const projects = await getProjects();
+  const [projects, locations, posts] = await Promise.all([
+    getProjects(),
+    getLocations(),
+    getPosts(),
+  ]);
 
   return [
     ...staticRoutes.map((route) => ({
@@ -45,6 +49,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         : now,
       changeFrequency: "weekly" as const,
       priority: 0.9,
+    })),
+    // The local-SEO landing pages — one per micro-market.
+    ...locations.map((location) => ({
+      url: `${base}/locations/${location.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
+    ...posts.map((post) => ({
+      url: `${base}/insights/${post.slug}`,
+      lastModified: new Date(post.publishedAt),
+      changeFrequency: "yearly" as const,
+      priority: 0.6,
     })),
   ];
 }

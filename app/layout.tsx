@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Manrope, Noto_Sans_Gujarati } from "next/font/google";
 
+import { FestiveBanner } from "@/components/layout/festive-banner";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { StickyMobileActionBar } from "@/components/layout/sticky-mobile-action-bar";
@@ -82,6 +83,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             Skip to content
           </a>
           <SiteHeader />
+          <FestiveBanner />
           {/* pb-16 clears the sticky mobile action bar. */}
           <main id="main" className="flex-1 pb-16 lg:pb-0">
             {children}
