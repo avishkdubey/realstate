@@ -124,3 +124,5 @@ and §4 records why:
 - Never merge `.eyebrow` with a `text-*` colour through `cn()` without checking
   the result: tailwind-merge treats same-prefix classes as conflicting. That
   collision is why the class is not called `.text-luxury`.
+
+# realstate
