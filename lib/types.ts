@@ -74,6 +74,11 @@ export type Project = {
   vastuFacing: Facing;
   summary: string;
   usp: string[];
+  /**
+   * Client photography and renders under /public/images. `hero` is the wide
+   * image used at the top of the project page and on cards.
+   */
+  images?: { hero?: string; gallery?: string[] };
   towers: Tower[];
   amenityIds: string[];
   specifications: { group: string; items: string[] }[];

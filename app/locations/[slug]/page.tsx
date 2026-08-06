@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { CorridorMap } from "@/components/locations/corridor-map";
+import { LocationMap } from "@/components/locations/location-map";
 import { FadeInView } from "@/components/motion/fade-in-view";
 import { ProjectCard } from "@/components/projects/project-card";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -104,7 +104,7 @@ export default async function LocationPage({
               </dl>
             </div>
 
-            <CorridorMap
+            <LocationMap
               locations={allLocations}
               activeSlug={location.slug}
               projectCounts={{ [location.slug]: projects.length }}

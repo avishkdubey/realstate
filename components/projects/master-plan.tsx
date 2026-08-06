@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 
 import { useReducedMotionPreference } from "@/components/providers/reduced-motion-provider";
@@ -22,32 +22,52 @@ const MasterPlan3D = dynamic(
  */
 export function MasterPlan({ towers }: { towers: Tower[] }) {
   const reducedMotion = useReducedMotionPreference();
+  const wrapper = useRef<HTMLDivElement>(null);
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
     if (!shouldRenderWebGL(reducedMotion)) return;
 
-    // Deferred to idle so the decision — and the chunk fetch it triggers —
-    // never competes with hydration on the site's heaviest page.
-    const schedule =
-      window.requestIdleCallback ?? ((cb: IdleRequestCallback) => setTimeout(cb, 800));
-    const handle = schedule(() => setAllowed(true));
+    // Two gates, not one. Idle keeps the decision off the hydration critical
+    // path; the intersection check keeps the Three.js chunk from downloading
+    // until the visitor is actually approaching the massing model.
+    const node = wrapper.current;
+    if (!node) return;
+
+    let idleHandle: number | undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        const schedule =
+          window.requestIdleCallback ??
+          ((cb: IdleRequestCallback) => setTimeout(cb, 200));
+        idleHandle = schedule(() => setAllowed(true)) as number;
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(node);
 
     return () => {
-      if (window.cancelIdleCallback && typeof handle === "number") {
-        window.cancelIdleCallback(handle);
+      observer.disconnect();
+      if (window.cancelIdleCallback && typeof idleHandle === "number") {
+        window.cancelIdleCallback(idleHandle);
       }
     };
   }, [reducedMotion]);
 
-  if (!allowed || towers.length === 0) return null;
+  if (towers.length === 0) return null;
 
   return (
-    <WebGLBoundary>
-      <div className="mb-16">
-        <MasterPlan3D towers={towers} />
-      </div>
-    </WebGLBoundary>
+    <div ref={wrapper}>
+      {allowed && (
+        <WebGLBoundary>
+          <div className="mb-16">
+            <MasterPlan3D towers={towers} />
+          </div>
+        </WebGLBoundary>
+      )}
+    </div>
   );
 }
 

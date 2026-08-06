@@ -30,8 +30,20 @@ export function priceLabel(project: Project): string {
   return `${formatPrice(project.startingPrice)} onwards`;
 }
 
-export function formatArea(project: Project): string {
-  return `${project.carpetAreaMin.toLocaleString("en-IN")}–${project.carpetAreaMax.toLocaleString("en-IN")} sq ft carpet`;
+/** Configurations, or a blank where none are published yet. */
+export function configLabel(project: Project): string | null {
+  return project.bhkOptions.length > 0 ? project.bhkOptions.join(" · ") : null;
+}
+
+/**
+ * Carpet-area range, or an honest blank where the client has not supplied it
+ * yet. Printing "0-0 sq ft" would be worse than printing nothing.
+ */
+export function formatArea(project: Project): string | null {
+  const { carpetAreaMin: min, carpetAreaMax: max } = project;
+  if (!min && !max) return null;
+  if (min === max) return `${min.toLocaleString("en-IN")} sq ft carpet`;
+  return `${min.toLocaleString("en-IN")}-${max.toLocaleString("en-IN")} sq ft carpet`;
 }
 
 export function formatStatus(status: Project["status"]): string {

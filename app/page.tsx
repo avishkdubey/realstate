@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { HeroCanvas } from "@/components/hero/hero-canvas";
-import { CorridorMap } from "@/components/locations/corridor-map";
+import { HomeHero } from "@/components/hero/home-hero";
+import { LocationMap } from "@/components/locations/location-map";
 import { FadeInView } from "@/components/motion/fade-in-view";
 import { RevealLine, ScrollReveal } from "@/components/motion/scroll-reveal";
 import { ProjectCard } from "@/components/projects/project-card";
@@ -14,7 +14,6 @@ import {
   getTestimonials,
 } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
-import { whatsappLink } from "@/lib/whatsapp";
 
 /**
  * Home.
@@ -38,56 +37,24 @@ export default async function HomePage() {
     withProjects.map(({ location, projectCount }) => [location.slug, projectCount]),
   );
   const latestPosts = posts.slice(0, 3);
-  const delivered = projects.filter((p) => p.status === "completed").length;
   const featured = [
     ...projects.filter((p) => p.status === "ongoing"),
     ...projects.filter((p) => p.status === "upcoming"),
   ].slice(0, 3);
 
+  // The client's own published figures. Confirm before launch — an
+  // overstated delivery record is a §12 exposure, not a flourish.
+  const { stats } = siteConfig;
   const trustMetrics = [
-    {
-      value: `${new Date().getFullYear() - siteConfig.foundedYear}`,
-      label: "Years building",
-    },
-    { value: String(delivered), label: "Projects delivered" },
-    { value: "—", label: "Sq ft delivered" },
-    { value: "—", label: "On-time possession" },
+    { value: `${stats.completedSqFt.toLocaleString("en-IN")}+`, label: "Completed sq. ft." },
+    { value: `${stats.happyFamilies.toLocaleString("en-IN")}+`, label: "Happy families" },
+    { value: `${stats.yearsExperience}+`, label: "Years of experience" },
+    { value: `${stats.completedProjects}+`, label: "Completed projects" },
   ];
 
   return (
     <>
-      {/* Hero. The WebGL scene mounts behind this markup, never in place of
-          it — the headline and CTAs below are always in the server HTML. */}
-      <section className="bg-charcoal text-ivory relative flex min-h-[92svh] items-end overflow-hidden">
-        <HeroCanvas />
-        <div className="container-page relative pb-24 pt-40">
-          <p className="eyebrow text-gold-soft">
-            Ahmedabad · Since {siteConfig.foundedYear}
-          </p>
-          <h1 className="measure mt-8 text-h2 md:text-h1">
-            Homes built to be inherited.
-          </h1>
-          <p className="measure text-lead text-stone-2 mt-8">
-            {siteConfig.description}
-          </p>
-          <div className="mt-12 flex flex-wrap gap-4">
-            <Link
-              href="/projects"
-              className="eyebrow bg-gold text-charcoal rounded-sm px-8 py-4 transition-opacity duration-200 hover:opacity-90"
-            >
-              View Projects
-            </Link>
-            <a
-              href={whatsappLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="eyebrow hover:bg-ivory hover:text-charcoal rounded-sm border border-white/25 px-8 py-4 transition-colors duration-200"
-            >
-              WhatsApp Us
-            </a>
-          </div>
-        </div>
-      </section>
+      <HomeHero />
 
       {/* Trust bar. Every figure here must be true before launch — an untrue
           on-time-possession claim is a §12 liability, not a marketing choice. */}
@@ -112,8 +79,8 @@ export default async function HomePage() {
               <div>
                 <p className="eyebrow text-bronze">Currently building</p>
                 <h2 className="measure mt-6 text-h3">
-                  <RevealLine>Four addresses in west Ahmedabad,</RevealLine>
-                  <RevealLine>and two more coming.</RevealLine>
+                  <RevealLine>Three under construction,</RevealLine>
+                  <RevealLine>two more on the way.</RevealLine>
                 </h2>
               </div>
               <Link
@@ -160,7 +127,7 @@ export default async function HomePage() {
       <section className="section">
         <div className="container-page grid gap-16 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <FadeInView>
-            <CorridorMap locations={locations} projectCounts={projectCounts} />
+            <LocationMap locations={locations} projectCounts={projectCounts} />
           </FadeInView>
           <FadeInView delay={0.05}>
             <p className="eyebrow text-bronze">Where we build</p>
@@ -206,7 +173,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials — renders only when the client supplies real, attributed
+          quotes. Inventing customer reviews for a live builder is not an
+          option, so an empty list simply hides the section. */}
       {testimonials.length > 0 && (
         <section className="section">
           <div className="container-page">

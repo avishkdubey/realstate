@@ -32,6 +32,7 @@ export function ScrollReveal({
     const element = container.current;
     let cleanup: (() => void) | undefined;
     let cancelled = false;
+    let safety: number | undefined;
 
     (async () => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([
@@ -46,7 +47,7 @@ export function ScrollReveal({
         const lines = element.querySelectorAll("[data-reveal-line]");
 
         if (lines.length > 0) {
-          gsap.from(lines, {
+          const reveal = gsap.from(lines, {
             yPercent: 110,
             opacity: 0,
             duration: 0.9,
@@ -58,6 +59,18 @@ export function ScrollReveal({
               once: true,
             },
           });
+
+          // Fail-safe. `gsap.from` hides the text immediately and only reveals
+          // it when ScrollTrigger fires — so if the trigger never fires the
+          // headline stays invisible for good. That can happen on a tab that
+          // loads in the background (rAF is paused, so ScrollTrigger never
+          // ticks) or if a layout change leaves the start position unreachable.
+          // Copy is not something to gamble on an animation library.
+          safety = window.setTimeout(() => {
+            if (!reveal.scrollTrigger?.isActive && reveal.progress() === 0) {
+              reveal.progress(1);
+            }
+          }, 2500);
         }
 
         if (parallax) {
@@ -82,6 +95,7 @@ export function ScrollReveal({
 
     return () => {
       cancelled = true;
+      if (safety) window.clearTimeout(safety);
       cleanup?.();
     };
   }, [reducedMotion, parallax]);

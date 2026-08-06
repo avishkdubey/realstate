@@ -2,21 +2,28 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { LazyMount, Skeleton } from "@/components/lazy-mount";
 import { DeferredEnquiryForm } from "@/components/forms/deferred-enquiry-form";
 import { DeferredEmiCalculator } from "@/components/finance/deferred-emi-calculator";
-import { PlaceholderVisual } from "@/components/media/placeholder-visual";
+import { ProjectImage } from "@/components/media/project-image";
 import { FadeInView } from "@/components/motion/fade-in-view";
 import { DeferredBrochure } from "@/components/projects/deferred-brochure";
 import { CostSheet } from "@/components/projects/cost-sheet";
 import { DeferredFloorPlans } from "@/components/projects/deferred-floor-plans";
 import { MasterPlan } from "@/components/projects/master-plan";
-import { PanoTour } from "@/components/projects/pano-tour";
+import { PannellumTour } from "@/components/projects/pannellum-tour";
 import { ProgressTimeline } from "@/components/projects/progress-timeline";
 import { ReraBlock } from "@/components/projects/rera-block";
 import { UnitMatrix } from "@/components/projects/unit-matrix";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getAmenities, getProject, getProjectSlugs } from "@/lib/data";
-import { countAvailable, formatStatus, priceLabel } from "@/lib/format";
+import {
+  configLabel,
+  countAvailable,
+  formatArea,
+  formatStatus,
+  priceLabel,
+} from "@/lib/format";
 import {
   breadcrumbSchema,
   faqSchema,
@@ -104,11 +111,8 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
             <dl className="grid grid-cols-2 gap-x-8 gap-y-8">
               <Fact label="Starting at" value={priceLabel(project)} />
-              <Fact label="Configurations" value={project.bhkOptions.join(" · ")} />
-              <Fact
-                label="Carpet area"
-                value={`${project.carpetAreaMin.toLocaleString("en-IN")}–${project.carpetAreaMax.toLocaleString("en-IN")} sq ft`}
-              />
+              <Fact label="Configurations" value={configLabel(project)} />
+              <Fact label="Carpet area" value={formatArea(project)} />
               <Fact
                 label="Possession"
                 value={project.possession ?? "Delivered"}
@@ -119,10 +123,13 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           </div>
         </div>
 
-        <PlaceholderVisual
-          label={project.name}
+        <ProjectImage
+          src={project.images?.hero}
+          alt={`${project.name} — ${project.microMarket}, Ahmedabad`}
           seed={project.name.length}
-          className="aspect-[21/9] w-full"
+          priority
+          sizes="100vw"
+          className="aspect-[16/9] w-full md:aspect-[21/9]"
         />
       </section>
 
@@ -186,7 +193,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           </p>
 
           <div className="mt-14">
-            <DeferredFloorPlans options={planOptions} />
+            <LazyMount placeholder={<Skeleton className="aspect-[3/2] w-full" />}>
+              <DeferredFloorPlans options={planOptions} />
+            </LazyMount>
           </div>
         </div>
       </section>
@@ -200,7 +209,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
             Look around before you fly in.
           </h2>
           <div className="mt-14 max-w-4xl">
-            <PanoTour
+            <PannellumTour
               src="/panoramas/demo-interior.png"
               label={`${project.name} — living area`}
             />
@@ -223,7 +232,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
                 basePrice={basePrice}
                 carpetArea={project.carpetAreaMin}
               />
-              <DeferredEmiCalculator startingPrice={basePrice} />
+              <LazyMount placeholder={<Skeleton className="h-[28rem] w-full" />}>
+                <DeferredEmiCalculator startingPrice={basePrice} />
+              </LazyMount>
             </div>
           </div>
         </section>
@@ -334,12 +345,16 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           </div>
 
           <div className="space-y-10">
-            <DeferredBrochure project={project} />
-            <DeferredEnquiryForm
-              projectSlug={project.slug}
-              projectName={project.name}
-              source="project"
-            />
+            <LazyMount placeholder={<Skeleton className="h-64 w-full" />}>
+              <DeferredBrochure project={project} />
+            </LazyMount>
+            <LazyMount placeholder={<Skeleton className="h-[34rem] w-full" />}>
+              <DeferredEnquiryForm
+                projectSlug={project.slug}
+                projectName={project.name}
+                source="project"
+              />
+            </LazyMount>
           </div>
         </div>
       </section>
@@ -353,7 +368,8 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value }: { label: string; value: string | null }) {
+  if (!value) return null;
   return (
     <div>
       <dt className="eyebrow text-stone-2">{label}</dt>

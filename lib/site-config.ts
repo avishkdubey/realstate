@@ -2,53 +2,70 @@
  * The single file to edit when swapping demo content for a real client.
  * Brand name, contact details, office address, socials and RERA identity all
  * live here — nothing else in the codebase should hardcode them.
+ *
+ * Populated from the client's existing site, kautilyadevelopers.in.
  */
 
 export const siteConfig = {
   /** Brand */
-  name: "Aarambh Estates",
-  legalName: "Aarambh Estates LLP",
-  tagline: "Homes built to be inherited.",
+  name: "Kautilya Developers",
+  legalName: "Kautilya Group",
+  tagline: "A trusted builder in Ahmedabad.",
   description:
-    "A builder of residences across west Ahmedabad — SG Highway, Shela, South Bopal and the GIFT City corridor. Apartments, villas and penthouses from ₹50 lakh.",
+    "Since 1996, Kautilya Group has built residential projects, redevelopments and land across Ahmedabad — from Shilaj and SG Highway to Chandkheda and Thaltej.",
   /** Year the firm was founded — powers the "since 19XX" legacy line. */
-  foundedYear: 1978,
+  foundedYear: 1996,
 
   /** Canonical origin. Drives metadataBase, sitemap, canonicals and OG URLs. */
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://kautilyadevelopers.in",
 
   /** Contact */
-  phone: "+91 79 4000 0000",
+  phone: "+91 99094 40033",
+  /** Second line published on the client's current site. */
+  phoneAlt: "+91 95372 06656",
   /** E.164, digits only — required by the wa.me deep-link format. */
-  whatsapp: "919999999999",
-  email: "sales@example.com",
+  whatsapp: "919909440033",
+  email: "admin@kautilyadevelopers.in",
 
   /** Physical office. Shown in the footer and on every page for trust. */
   address: {
-    street: "4th Floor, Westgate Business Bay, Near YMCA Club",
-    locality: "SG Highway, Makarba",
+    street: "Kautilya Two20, Near Shridhar Corporate House",
+    locality: "Shilaj Circle, Shilaj",
     city: "Ahmedabad",
     region: "Gujarat",
-    postalCode: "380051",
+    postalCode: "380059",
     country: "IN",
   },
-  geo: { lat: 23.0089, lng: 72.5064 },
+  /** Shilaj Circle. Replace with surveyed coordinates if precision matters. */
+  geo: { lat: 23.0364, lng: 72.4735 },
 
   /** Sales desk hours, plus a note for NRI buyers in other timezones. */
   hours: "Mon–Sat, 10:00–19:00 IST",
   nriNote: "NRI callbacks scheduled for US, UK, Canada and East Africa hours.",
 
   /**
+   * Headline figures as published on the client's current website. These are
+   * the firm's own claims — confirm them before launch, because an overstated
+   * delivery record is a §12 exposure, not a marketing flourish.
+   */
+  stats: {
+    completedSqFt: 2_490_150,
+    happyFamilies: 1_746,
+    yearsExperience: 29,
+    completedProjects: 23,
+  },
+
+  /**
    * RERA identity. Per RERA Act §11(2) the authority URL and registration
    * number must appear prominently on every project page and in the footer.
    * NEVER substitute a fabricated number — §59 penalties attach to the
-   * advertisement itself. Demo builds use the DEMO-PENDING marker.
+   * advertisement itself. Awaiting the client's registration numbers.
    */
   rera: {
     authority: "GujRERA",
     authorityUrl: "https://gujrera.gujarat.gov.in",
     /** Firm-level registration, where applicable. */
-    promoterNumber: "DEMO-PENDING",
+    promoterNumber: "AWAITING CLIENT",
   },
 
   socials: {

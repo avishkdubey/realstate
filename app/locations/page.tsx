@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { CorridorList, CorridorMap } from "@/components/locations/corridor-map";
+import { CorridorList } from "@/components/locations/corridor-map";
+import { LocationMap } from "@/components/locations/location-map";
 import { FadeInView } from "@/components/motion/fade-in-view";
 import { getLocations, getLocationsWithProjects } from "@/lib/data";
 
@@ -36,7 +37,7 @@ export default async function LocationsPage() {
 
         <div className="mt-16 grid gap-16 lg:grid-cols-[1.1fr_1fr] lg:items-start">
           <FadeInView>
-            <CorridorMap locations={locations} projectCounts={projectCounts} />
+            <LocationMap locations={locations} projectCounts={projectCounts} />
           </FadeInView>
 
           <FadeInView delay={0.05}>

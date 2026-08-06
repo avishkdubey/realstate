@@ -1,36 +1,18 @@
 import type { Testimonial } from "@/lib/types";
 
 /**
- * Demo testimonials. Real ones must be attributable — named, with a role and
- * a location. Anonymous quotes carry no weight with this audience and are
- * worse than none at all (CLAUDE.md §2).
+ * Customer testimonials.
+ *
+ * Deliberately empty. The client's current site renders its testimonials
+ * client-side, so none could be carried across, and writing quotes and
+ * attributing them to named buyers would be fabricating reviews for a real
+ * business — not something to ship and quietly hope gets replaced.
+ *
+ * The carousel and the NRI page both hide themselves when this is empty, so
+ * the site reads correctly until the real quotes arrive.
+ *
+ * TODO(client): supply quotes with a real name, role and locality. Anonymous
+ * testimonials carry no weight with this audience and are worse than none
+ * (CLAUDE.md §2).
  */
-export const testimonials: Testimonial[] = [
-  {
-    id: "t1",
-    name: "Nikunj Shah",
-    role: "Business owner",
-    location: "South Bopal",
-    quote:
-      "They handed over four months early, which I did not believe until I had the keys. The snag list was closed in three weeks.",
-    projectSlug: "aarambh-corniche",
-  },
-  {
-    id: "t2",
-    name: "Dr. Rupal Mehta",
-    role: "Consultant physician",
-    location: "Bodakdev",
-    quote:
-      "I asked for the carpet area on every drawing, and they gave it without the usual argument about super built-up. That is when I decided.",
-    projectSlug: "aarambh-sindhu-house",
-  },
-  {
-    id: "t3",
-    name: "Hardik Patel",
-    role: "Software engineer",
-    location: "New Jersey, USA",
-    quote:
-      "I bought from six thousand miles away. The site photographs arrived every month without my asking for them.",
-    projectSlug: "aarambh-vantage",
-  },
-];
+export const testimonials: Testimonial[] = [];

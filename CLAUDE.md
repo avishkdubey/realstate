@@ -125,10 +125,12 @@ and speed — while delivering a brand experience portals cannot.
   Typed routes are on by default — a `<Link>` to a route that does not exist fails the build,
   so stub pages must land before the links that point at them.
 - **Tailwind CSS v4** + **shadcn/ui** (Radix primitives)
-- **GSAP 3.13+** with ScrollTrigger (scroll-linked headline reveals) + **Lenis** (smooth scroll).
-  ~~Framer Motion~~ — *removed in implementation.* A dozen `motion.div` instances per page cost
-  150–300ms of blocking time on the amenities and project pages; the reveal primitive is now one
-  IntersectionObserver plus a CSS transition, which measured 14–23 Lighthouse points better.
+- **Framer Motion** (component reveals and micro-interactions) + **GSAP 3.13+** with ScrollTrigger
+  (scroll-linked headline reveals) + **Lenis** (smooth scroll).
+  Framer must be used through `LazyMotion` with the `domAnimation` feature set and the `m`
+  primitive, never the full `motion` component — the difference is roughly 150–300ms of blocking
+  time on pages carrying a dozen reveals. `components/motion/motion-provider.tsx` sets `strict`
+  so a stray `motion` import fails loudly.
   - GSAP is **100% free since 30 Apr 2025** (Webflow announcement), including all former Club plugins,
     commercial use covered. No paid dependency remains in the motion stack.
 - **React Three Fiber** + `@react-three/drei` + `@react-three/postprocessing` (tasteful WebGL only)
@@ -137,13 +139,13 @@ and speed — while delivering a brand experience portals cannot.
   Alternative: Payload v3 (self-host). Sanity recommended for a non-technical builder team.
 - Email: **Resend** (fallback Nodemailer). Spam: **Cloudflare Turnstile** + honeypot
 - Images/video: `next/image` + **ImageKit** (or Cloudinary) free tier
-- Maps: ~~MapLibre GL~~ — *replaced in implementation by a hand-drawn inline SVG corridor map.*
-  MapLibre costs ~200KB gzip and needs a keyed tile provider before any commercial launch;
-  the SVG is ~3KB, server-rendered, needs no key, and reads as designed rather than generic.
-  `components/locations/corridor-map.tsx` keeps generic props so a MapLibre swap is one file.
-- 360 tours: ~~Pannellum~~ — *replaced in implementation by a Three.js inverted sphere.* Three is
-  already in the bundle for the hero and master plan, so a second renderer bought nothing.
-  Loads on intersection and parks its render loop when the tab is hidden.
+- Maps: **MapLibre GL** + OpenStreetMap (Google Maps only if reviews/embeds needed).
+  Mounted on intersection behind a server-rendered SVG corridor map, so the ~200KB library never
+  sits on the critical path and a blocked tile host still leaves a usable map.
+  **Before launch:** set `NEXT_PUBLIC_MAP_TILE_URL` to a provider you hold an account with —
+  OSM's public tiles are not licensed for production traffic.
+- 360 tours: **Pannellum** (~21KB, MIT) — UMD, so imported inside an effect on intersection rather
+  than at module scope. Alt: Marzipano, Photo Sphere Viewer
 - Analytics: Vercel Analytics + GA4 via GTM; Meta Pixel for retargeting
 - Hosting: **Vercel**. Bundle watch: `@next/bundle-analyzer`
 

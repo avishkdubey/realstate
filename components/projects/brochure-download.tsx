@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { formatArea, priceLabel } from "@/lib/format";
+import { configLabel, formatArea, priceLabel } from "@/lib/format";
 import type { Project } from "@/lib/types";
 import { whatsappLink } from "@/lib/whatsapp";
 
@@ -54,14 +54,13 @@ export function BrochureDownload({ project }: { project: Project }) {
     <div className="border border-border p-8">
       <p className="eyebrow text-bronze">Brochure</p>
 
+      {/* Facts the client has not supplied yet are omitted rather than shown
+          as blanks or zeroes. */}
       <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Preview label="Configurations" value={project.bhkOptions.join(" · ")} />
+        <Preview label="Configurations" value={configLabel(project)} />
         <Preview label="Carpet area" value={formatArea(project)} />
         <Preview label="Starting at" value={priceLabel(project)} />
-        <Preview
-          label="Possession"
-          value={project.possession ?? "Delivered"}
-        />
+        <Preview label="Possession" value={project.possession ?? "Delivered"} />
       </dl>
 
       <p className="measure text-small text-muted-foreground mt-6">
@@ -151,7 +150,8 @@ export function BrochureDownload({ project }: { project: Project }) {
   );
 }
 
-function Preview({ label, value }: { label: string; value: string }) {
+function Preview({ label, value }: { label: string; value: string | null }) {
+  if (!value) return null;
   return (
     <div className="border-t border-border pt-3">
       <dt className="eyebrow text-muted-foreground">{label}</dt>
