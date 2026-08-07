@@ -12,7 +12,6 @@ import {
   useSaccade,
 } from "@/components/onboarding/agent-rig";
 import { usePointerLook } from "@/components/three/use-pointer-look";
-import { HEX } from "@/lib/three-palette";
 
 /**
  * A stand-in agent, built from primitives.
@@ -96,7 +95,7 @@ export function AgentPlaceholder({
     if (jaw.current) {
       const open = THREE.MathUtils.clamp(mouth.current, 0, 1);
       jaw.current.scale.y = 0.32 + open * 0.85;
-      jaw.current.position.y = -0.17 - open * 0.035;
+      jaw.current.position.y = -0.072 - open * 0.02;
     }
 
     // A slow weight shift, on two incommensurate periods so it never loops
@@ -108,23 +107,29 @@ export function AgentPlaceholder({
   });
 
   return (
-    <group ref={root} position={[0, -1.3, 0]}>
+    /* Feet on the floor, head near 1.65m — a standing person's real height.
+       This used to sit at y = -1.3, which dropped her head to about 0.37 while
+       the camera looked horizontally from 1.45: she was rendering, correctly
+       and invisibly, below the bottom of frame. Build figures at human scale
+       and frame them with the camera, rather than shifting the figure to meet
+       a camera that is pointing somewhere else. */
+    <group ref={root} position={[0, 0, 0]}>
       {/* Torso */}
       <group ref={spine} position={[0, 1.05, 0]}>
         <mesh castShadow position={[0, 0.1, 0]}>
-          <capsuleGeometry args={[0.26, 0.5, 8, 24]} />
+          <capsuleGeometry args={[0.185, 0.52, 8, 24]} />
           <meshStandardMaterial color={0x2b3a45} roughness={0.75} metalness={0.05} />
         </mesh>
         {/* Shoulders. The rotation lays the capsule on its side and belongs on
             the mesh — a geometry has no transform of its own. */}
         <mesh position={[0, 0.34, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <capsuleGeometry args={[0.1, 0.52, 6, 16]} />
+          <capsuleGeometry args={[0.062, 0.34, 6, 16]} />
           <meshStandardMaterial color={0x2b3a45} roughness={0.75} metalness={0.05} />
         </mesh>
 
         <group ref={neck} position={[0, 0.42, 0]}>
           <mesh position={[0, 0.06, 0]}>
-            <capsuleGeometry args={[0.062, 0.1, 6, 16]} />
+            <capsuleGeometry args={[0.05, 0.13, 6, 16]} />
             <meshStandardMaterial color={0xc9a68a} roughness={0.62} />
           </mesh>
 
@@ -165,19 +170,21 @@ export function AgentPlaceholder({
 
             {/* Mouth. Scaled on Y by the analyser — the same channel the real
                 rig will route into `jawOpen`. */}
-            <mesh ref={jaw} position={[0, -0.17, 0.132]} scale={[1, 0.32, 1]}>
-              <sphereGeometry args={[0.035, 20, 12]} />
+            {/* y = -0.07, not -0.17: the head sphere's radius is 0.155, so the
+                original sat below her chin entirely — the mouth was never on
+                the face. */}
+            <mesh ref={jaw} position={[0, -0.072, 0.135]} scale={[1, 0.32, 1]}>
+              <sphereGeometry args={[0.032, 20, 12]} />
               <meshStandardMaterial color={0x6d3b3b} roughness={0.5} />
             </mesh>
           </group>
         </group>
       </group>
 
-      {/* A plinth, so she is standing on something rather than floating. */}
-      <mesh position={[0, 0.02, 0]} receiveShadow>
-        <cylinderGeometry args={[0.55, 0.6, 0.04, 48]} />
-        <meshStandardMaterial color={HEX.surface} roughness={0.4} metalness={0.3} />
-      </mesh>
+      {/* No plinth. She has no legs — this is a chest-up portrait — so a disc
+          at floor level either floats disconnected below her or, as it did,
+          cuts straight through the torso. A portrait crop does not need a
+          floor; it needs a frame. */}
     </group>
   );
 }

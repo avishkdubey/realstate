@@ -77,16 +77,26 @@ export function SceneFrame({
   );
 
   /* R3F measures its container with a ResizeObserver and will not build its
-     root until that measurement is non-zero. When a Canvas mounts inside a
-     container whose height resolves a beat later — a `dynamic(ssr:false)` scene
-     inside a `sticky h-[100svh]`, say — the first measurement can come back
-     zero, and if no resize ever follows, R3F waits forever. The symptom is
-     brutal to diagnose: the <canvas> element exists and is correctly sized in
-     CSS, there is no error, and yet not one child of the Canvas ever mounts.
-     One synthetic resize after paint is enough to unstick it. */
+     root until that measurement is non-zero. When the first measurement comes
+     back zero — a `dynamic(ssr:false)` scene inside a `sticky h-[100svh]`, or a
+     canvas mounted the instant a full-screen overlay opens — and no resize ever
+     follows, R3F waits forever. The symptom is brutal to diagnose: the <canvas>
+     exists, is correctly sized in CSS, throws nothing, and not one child of the
+     Canvas ever mounts. A bright red sphere at the origin renders as nothing.
+
+     A single nudge is not enough. On a canvas that mounts during page load the
+     one rAF can land *before* R3F has attached its observer, so the event goes
+     nowhere. Firing across the first second covers both the early case and the
+     late-layout case; they are four events, and they stop as soon as the
+     component unmounts. */
   useEffect(() => {
-    const id = requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-    return () => cancelAnimationFrame(id);
+    const nudge = () => window.dispatchEvent(new Event("resize"));
+    const frame = requestAnimationFrame(nudge);
+    const timers = [120, 400, 900].map((ms) => window.setTimeout(nudge, ms));
+    return () => {
+      cancelAnimationFrame(frame);
+      timers.forEach(clearTimeout);
+    };
   }, []);
 
   if (tier === null) return null;
