@@ -76,6 +76,19 @@ export function SceneFrame({
     () => null as QualityTier | null,
   );
 
+  /* R3F measures its container with a ResizeObserver and will not build its
+     root until that measurement is non-zero. When a Canvas mounts inside a
+     container whose height resolves a beat later — a `dynamic(ssr:false)` scene
+     inside a `sticky h-[100svh]`, say — the first measurement can come back
+     zero, and if no resize ever follows, R3F waits forever. The symptom is
+     brutal to diagnose: the <canvas> element exists and is correctly sized in
+     CSS, there is no error, and yet not one child of the Canvas ever mounts.
+     One synthetic resize after paint is enough to unstick it. */
+  useEffect(() => {
+    const id = requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   if (tier === null) return null;
 
   return (
@@ -105,8 +118,15 @@ export function SceneFrame({
         <fog attach="fog" args={[HEX.ground, fog.near, fog.far]} />
       )}
 
+      {/* Two boundaries, not one. Sharing a boundary means anything the
+          environment does while it settles holds the entire scene unmounted —
+          which showed up as a canvas that cleared to the background colour and
+          never drew geometry, with no error to point at. The environment is
+          atmosphere; the scene must never wait on it. */}
       <Suspense fallback={null}>
         <StudioEnvironment />
+      </Suspense>
+      <Suspense fallback={null}>
         {typeof children === "function" ? children(tier) : children}
       </Suspense>
 

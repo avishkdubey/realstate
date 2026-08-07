@@ -17,12 +17,32 @@ export type Doorway = {
   toRoom: number;
 };
 
+/**
+ * Metres per grid cell when the project has no carpet area on record.
+ *
+ * Every project in `lib/placeholders/projects.ts` currently ships
+ * `carpetAreaMin: 0`, because the client has not supplied real figures yet. Fed
+ * straight through, that made `gridToMeters` zero — zero-size walls and a camera
+ * path collapsed onto a single point, so the walkthrough rendered pure black
+ * with no error anywhere. A silent divide-by-nothing is a bad way to fail.
+ *
+ * 0.55 puts a 3 BHK's 26×18 grid at roughly 14m × 10m, which is plausible for
+ * the configuration. It is deliberately *nominal*: it exists so the schematic
+ * has sensible proportions, and the "not to scale" disclaimer on the section is
+ * what keeps that honest. The moment real carpet areas land in the data this
+ * fallback stops being used, and the geometry starts agreeing with the printed
+ * dimensions instead — which is the behaviour RERA §12 actually wants.
+ */
+const NOMINAL_GRID_METRES = 0.55;
+
 export function generateInterior(plan: FloorPlan, carpetAreaSqFt: number) {
   // Derive scale from the living room (or first room) to match printed dimensions.
   const baseRoom = plan.rooms.find((r) => r.kind === "living") || plan.rooms[0];
   const dimStr = roomDimensions(baseRoom, carpetAreaSqFt);
   const [wStr] = dimStr.replace(" m", "").split(" × ");
-  const gridToMeters = parseFloat(wStr) / baseRoom.w;
+  const derived = parseFloat(wStr) / baseRoom.w;
+  const gridToMeters =
+    Number.isFinite(derived) && derived > 0.01 ? derived : NOMINAL_GRID_METRES;
 
   const grid = Array.from({ length: plan.height }, () => new Int32Array(plan.width).fill(-1));
   plan.rooms.forEach((room, i) => {
