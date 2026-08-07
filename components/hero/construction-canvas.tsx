@@ -28,10 +28,11 @@ export function ConstructionCanvas({
     <div className="absolute inset-0" aria-hidden>
       <SceneFrame
         camera={{ position: [11, 5, 16], fov: 46 }}
-        /* Pushed well back from the first pass. Fog starting at 16 units was
-           swallowing the top half of a 20-unit tower — aerial perspective is
-           meant to suggest scale, not delete the subject. */
-        fog={{ near: 34, far: 95 }}
+        /* Fog now has to reach past the neighbourhood, whose furthest buildings
+           sit ~100 units out. Starting it at 45 keeps the tower itself crisp
+           while the surrounds stack up in haze behind it — which is what gives
+           the site depth rather than a row of cut-outs. */
+        fog={{ near: 45, far: 190 }}
         effects={(tier) => <HouseGrade tier={tier} />}
       >
         {(tier) => <TowerConstruction progress={progress} tier={tier} />}

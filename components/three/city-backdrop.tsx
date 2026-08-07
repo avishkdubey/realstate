@@ -5,6 +5,7 @@ import { Clone, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import { GLB_CATALOG } from "@/lib/glb-catalog";
+import { COLORS } from "@/lib/three-palette";
 import { seededRandom } from "@/lib/tower-geometry";
 import type { QualityTier } from "@/lib/webgl";
 
@@ -31,6 +32,10 @@ import type { QualityTier } from "@/lib/webgl";
  * a difference nobody can see.
  */
 
+/** What the surrounds are pulled toward. Matches the page ground so distant
+    buildings dissolve into it rather than ending at a visible edge. */
+const NIGHT = COLORS.ground;
+
 /** Where each building sits, in metres, relative to the flat. */
 type Placement = {
   asset: keyof typeof GLB_CATALOG;
@@ -56,6 +61,48 @@ const SKYLINE: Placement[] = [
   { asset: "apartmentHouse", position: [38, 0, -95], height: 52, rotationY: 0.8 },
   { asset: "apartmentHouse", position: [-42, 0, -104], height: 38, rotationY: 1.7 },
 ];
+
+/**
+ * The city around the construction site, for the home hero.
+ *
+ * This is the difference between "a tower" and "a tower being built somewhere".
+ * A massing model alone on a ground plane reads as a diagram no matter how well
+ * it is lit — what makes it read as real is context: neighbours at varied
+ * heights, set back at varied distances, receding into haze. The eye judges
+ * scale by comparison, and with nothing to compare against there is no scale.
+ *
+ * The ring is deliberately open toward the camera's arc so the tower is never
+ * occluded, and it leans on the untextured model for everything but the two
+ * nearest slots, where detail is actually resolvable.
+ */
+const SITE_SURROUNDS: Placement[] = [
+  /* Near neighbours, flanking — but set well back. At 14–20 units they filled
+     a third of the frame and read as flat billboards rather than buildings;
+     the tower needs clear air around it to be the subject. */
+  { asset: "cityBlock", position: [-40, 0, -34], height: 18, rotationY: 0.5 },
+  { asset: "apartmentHouse", position: [42, 0, -38], height: 22, rotationY: -0.7 },
+  // Middle distance.
+  { asset: "apartmentHouse", position: [-38, 0, -44], height: 29, rotationY: 1.3 },
+  { asset: "apartmentHouse", position: [34, 0, -52], height: 24, rotationY: 2.6 },
+  { asset: "apartmentHouse", position: [-8, 0, -62], height: 33, rotationY: 0.15 },
+  // Far skyline, fading into fog.
+  { asset: "apartmentHouse", position: [52, 0, -78], height: 40, rotationY: 1.9 },
+  { asset: "apartmentHouse", position: [-56, 0, -88], height: 36, rotationY: 0.9 },
+  { asset: "apartmentHouse", position: [14, 0, -98], height: 46, rotationY: 2.2 },
+];
+
+export function CitySurrounds({ tier }: { tier: QualityTier }) {
+  const placements = useMemo(() => {
+    if (tier === "low") return [];
+    if (tier === "medium") {
+      return SITE_SURROUNDS.filter((p) => p.asset === "apartmentHouse").slice(0, 5);
+    }
+    return SITE_SURROUNDS;
+  }, [tier]);
+
+  if (placements.length === 0) return null;
+  return <Skyline placements={placements} />;
+}
 
 export function CityBackdrop({ tier }: { tier: QualityTier }) {
   /* Nothing outside the window on the weakest hardware. The interior is the
@@ -104,6 +151,42 @@ function AssetGroup({
   const { scene } = useGLTF(asset.path);
 
   /**
+   * Grade the models into the night before they are ever placed.
+   *
+   * These arrive lit for daylight — bright concrete, white render, mid-grey
+   * glass. Dropped into this scene untouched they came out brighter than the
+   * tower they are meant to sit behind, which inverts the composition: the eye
+   * goes to the neighbours and the subject recedes. In a night set the subject
+   * has to be the brightest thing in frame, so everything else is pulled down
+   * and cooled toward the page ground.
+   *
+   * Materials are cloned first. `useGLTF` caches the loaded scene globally, so
+   * mutating the originals would quietly re-grade every other use of the same
+   * file — including the view from inside the flat.
+   */
+  const graded = useMemo(() => {
+    const copy = scene.clone(true);
+    copy.traverse((node) => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const source = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mesh.material = source.map((m) => {
+        const mat = (m as THREE.MeshStandardMaterial).clone();
+        if (mat.color) mat.color.lerp(NIGHT, 0.72);
+        if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
+        mat.envMapIntensity = 0.35;
+        // Emissive maps on these models are daytime signage; muting them stops
+        // random panels glowing brighter than the tower's own lit windows.
+        if (mat.emissive) mat.emissive.multiplyScalar(0.25);
+        mat.needsUpdate = true;
+        return mat;
+      });
+      if (mesh.material.length === 1) mesh.material = mesh.material[0];
+    });
+    return copy;
+  }, [scene]);
+
+  /**
    * Fit the model to one metre tall, once, so each placement only has to
    * multiply by the height it wants.
    *
@@ -112,11 +195,11 @@ function AssetGroup({
    * effective size, and this is the number that is actually true.
    */
   const unitScale = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(scene);
+    const box = new THREE.Box3().setFromObject(graded);
     const size = box.getSize(new THREE.Vector3());
     const tallest = Math.max(size.x, size.y, size.z);
     return tallest > 0 ? 1 / tallest : 1;
-  }, [scene]);
+  }, [graded]);
 
   /** Sink each building slightly so none appears to float on the fog line. */
   const jitter = useMemo(() => seededRandom(0x5eed), []);
@@ -134,7 +217,7 @@ function AssetGroup({
           >
             {/* drei's Clone shares geometry and materials across instances —
                 `scene.clone()` would deep-copy 24 MB of buffers per placement. */}
-            <Clone object={scene} />
+            <Clone object={graded} />
           </group>
         );
       })}

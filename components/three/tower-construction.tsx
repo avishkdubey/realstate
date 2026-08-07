@@ -1,9 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, type RefObject } from "react";
+import { Suspense, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
+import { CitySurrounds } from "@/components/three/city-backdrop";
 import { usePointerLook } from "@/components/three/use-pointer-look";
 import {
   clamp01,
@@ -372,11 +373,25 @@ export function TowerConstruction({
       <directionalLight position={[-8, 5, -6]} intensity={1.1} color={0x6f86a8} />
       <ambientLight intensity={0.55} />
 
-      {/* Ground. Large enough that the fog eats its edge rather than the
-          viewer seeing a floating slab. */}
+      {/* The neighbourhood. A massing model alone on a plane reads as a
+          diagram however well it is lit — the eye judges scale by comparison,
+          so without neighbours there is nothing to be big *against*. This is
+          the single largest step toward the scene reading as a real site. */}
+      <Suspense fallback={null}>
+        <CitySurrounds tier={tier} />
+      </Suspense>
+
+      {/* Ground. Slightly lifted off the page black and given a little sheen so
+          it catches the key light and reads as wet-season tarmac rather than
+          the void the tower was previously floating in. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow={shadows}>
-        <planeGeometry args={[120, 120]} />
-        <meshStandardMaterial color={HEX.ground} roughness={0.95} metalness={0} />
+        <planeGeometry args={[400, 400]} />
+        <meshStandardMaterial
+          color={0x171614}
+          roughness={0.55}
+          metalness={0.2}
+          envMapIntensity={0.7}
+        />
       </mesh>
 
       <instancedMesh

@@ -121,6 +121,17 @@ export function getFloorPlan(bhk: string): FloorPlan {
  * real carpet area. The proportions are schematic; the areas are not.
  */
 export function roomDimensions(room: Room, carpetAreaSqFt: number): string {
+  /* No carpet area on record means no dimension to print.
+     Every project currently ships `carpetAreaMin: 0` while the client's real
+     figures are outstanding, and the arithmetic below divides zero by zero —
+     so the plan was rendering "NaN × 0.0 m" against every room. Saying so
+     plainly is the only honest option: inventing a plausible-looking figure on
+     a page that a buyer reads as the room's size is exactly the kind of
+     representation RERA §12 holds the promoter liable for. */
+  if (!Number.isFinite(carpetAreaSqFt) || carpetAreaSqFt <= 0) {
+    return "Dimensions on request";
+  }
+
   const areaSqM = carpetAreaSqFt * room.share * 0.092903;
   // Recover a plausible rectangle from the area using the drawn aspect ratio.
   const aspect = room.w / room.h;
