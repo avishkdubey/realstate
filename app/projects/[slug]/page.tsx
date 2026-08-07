@@ -11,7 +11,7 @@ import { DeferredBrochure } from "@/components/projects/deferred-brochure";
 import { CostSheet } from "@/components/projects/cost-sheet";
 import { DeferredFloorPlans } from "@/components/projects/deferred-floor-plans";
 import { MasterPlan } from "@/components/projects/master-plan";
-import { PannellumTour } from "@/components/projects/pannellum-tour";
+import { ApartmentInterior } from "@/components/projects/apartment-interior";
 import { ProgressTimeline } from "@/components/projects/progress-timeline";
 import { ReraBlock } from "@/components/projects/rera-block";
 import { UnitMatrix } from "@/components/projects/unit-matrix";
@@ -202,20 +202,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
       {/* 360° view. Matters most to buyers who will never stand in the
           building before deciding — which describes most NRI purchases. */}
-      <section className="section bg-surface-2">
-        <div className="container-page">
-          <p className="eyebrow text-accent">360° view</p>
-          <h2 className="measure mt-6 text-h4">
-            Look around before you fly in.
-          </h2>
-          <div className="mt-14 max-w-4xl">
-            <PannellumTour
-              src="/panoramas/demo-interior.png"
-              label={`${project.name} — living area`}
-            />
-          </div>
-        </div>
-      </section>
+      <ApartmentInterior bhk={project.bhkOptions[0]} carpetAreaSqFt={project.carpetAreaMin} />
 
       {/* Money */}
       {basePrice && (
