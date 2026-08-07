@@ -4,6 +4,7 @@ import { useRef, useMemo, useLayoutEffect, Suspense, type RefObject } from "reac
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { generateInterior } from "@/lib/interior-generator";
+import { furnishPlan, type Piece } from "@/lib/interior-furniture";
 import { getFloorPlan } from "@/lib/floor-plans";
 import { CityBackdrop } from "@/components/three/city-backdrop";
 import { useScrollProgress } from "@/components/three/use-scroll-progress";
@@ -116,6 +117,11 @@ export function ApartmentInteriorScene({ sectionRef, bhk, carpetAreaSqFt }: Prop
     if (wallMesh.current.instanceColor) wallMesh.current.instanceColor.needsUpdate = true;
   }, [pieces]);
 
+  const furniture = useMemo(
+    () => furnishPlan(plan, gridToMeters, offsetX, offsetZ),
+    [plan, gridToMeters, offsetX, offsetZ],
+  );
+
   /** Room centroids, for placing a warm practical light in each. */
   const roomLights = useMemo(
     () =>
@@ -175,6 +181,8 @@ export function ApartmentInteriorScene({ sectionRef, bhk, carpetAreaSqFt }: Prop
             <meshStandardMaterial roughness={0.85} metalness={0} />
           </instancedMesh>
 
+          <Furniture pieces={furniture} />
+
           {/* The city outside. Tier-gated, and scaled from measured bounding
               boxes — see components/three/city-backdrop.tsx for why that matters. */}
           <Suspense fallback={null}>
@@ -216,6 +224,49 @@ export function ApartmentInteriorScene({ sectionRef, bhk, carpetAreaSqFt }: Prop
         </>
       )}
     </SceneFrame>
+  );
+}
+
+/**
+ * Furniture, as shared-material boxes.
+ *
+ * Seven materials for the whole flat, created once. Silhouettes rather than
+ * models: at walking distance in a dim room the eye reads proportion and
+ * placement long before it reads detail, so the cost of a real furniture asset
+ * buys almost nothing here.
+ */
+const FURNITURE_MATERIALS: Record<Piece["kind"], THREE.MeshStandardMaterial> = {
+  soft: new THREE.MeshStandardMaterial({ color: "#4a4740", roughness: 0.95 }),
+  timber: new THREE.MeshStandardMaterial({ color: "#4b3a2a", roughness: 0.7 }),
+  stone: new THREE.MeshStandardMaterial({ color: "#7d766c", roughness: 0.35, metalness: 0.1 }),
+  metal: new THREE.MeshStandardMaterial({ color: "#8d8a85", roughness: 0.3, metalness: 0.8 }),
+  textile: new THREE.MeshStandardMaterial({ color: "#5d5346", roughness: 1 }),
+  foliage: new THREE.MeshStandardMaterial({ color: "#2f4a33", roughness: 0.9 }),
+  // Emissive, so a television reads as switched on rather than as a black slab.
+  screen: new THREE.MeshStandardMaterial({
+    color: "#0b1016",
+    emissive: "#6f8fb5",
+    emissiveIntensity: 0.9,
+    roughness: 0.25,
+  }),
+};
+
+function Furniture({ pieces }: { pieces: Piece[] }) {
+  return (
+    <>
+      {pieces.map((piece, i) => (
+        <mesh
+          key={i}
+          position={piece.position}
+          rotation={[0, piece.rotationY ?? 0, 0]}
+          material={FURNITURE_MATERIALS[piece.kind]}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={piece.size} />
+        </mesh>
+      ))}
+    </>
   );
 }
 

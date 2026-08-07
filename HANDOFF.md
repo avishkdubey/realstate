@@ -1,11 +1,35 @@
 # Handoff — premium dark 3D overhaul
 
-**Status as of this document: Phases 0–3 complete and verified. Phase 4 is
-partially built. Phases 5–6 not started.**
+**Status: all six phases complete.** Dark theme, 3D foundations, construction
+hero, onboarding agent, apartment walkthrough, cleanup. Build, typecheck and
+lint are green.
+
+Outstanding, in rough order of value:
+
+1. **Swap in the real assets** — the Ready Player Me GLB and the ElevenLabs
+   MP3s (§10). The agent runs against a primitives placeholder today; the rig
+   contract, tracking, blinking and lip-sync are all already wired, so this is
+   a change of geometry, not of logic.
+2. **A human scroll-through.** Screenshot capture in this environment lags
+   Lenis-driven scrolling badly enough to be misleading — several "bugs" turned
+   out to be stale frames. Assertions against the DOM were reliable; pictures
+   were not. The interior in particular deserves a real pair of eyes.
+3. **Real carpet areas.** Everything downstream of `carpetAreaMin: 0` currently
+   falls back to a nominal scale or says "on request".
+
+### The one workaround to know about
+
+`components/three/scene-frame.tsx` fires synthetic `resize` events across the
+first second after mount. That is not decoration — R3F will not build its root
+until its ResizeObserver reports a non-zero measurement, and when the first
+measurement comes back zero and nothing nudges it again it waits forever. The
+failure mode is vicious: the `<canvas>` exists, is correctly sized in CSS,
+throws nothing, and not a single child mounts. A bright red sphere at the origin
+renders as nothing. This has silently blanked **three** separate scenes. If a
+fourth ever comes up empty with no error, look here first.
 
 This file exists so a different agent or developer can pick the work up cold.
-Read it before `CLAUDE.md`, and treat anything here that contradicts `README.md`
-as correct — the README is stale in several places (see §7).
+Read it before `CLAUDE.md`.
 
 ---
 
@@ -64,6 +88,18 @@ The full original plan is at `/home/cis/.claude/plans/delightful-singing-haven.m
 - **Do not hammer reload while testing 3D.** After ~15 reloads in one tab the
   WebGL context stops being granted and the scene silently falls back. Fresh tab
   fixes it. This is a testing artifact, not a site defect.
+- **`IntersectionObserver` does not fire in the automated browser here, and
+  screenshots lag Lenis-driven scrolling.** Both were established the hard way.
+  A *control* observer, created by hand on an element sitting at `top: 300` in a
+  871px viewport, never fired — which proves the environment, not the code. So
+  every `LazyMount` block (floor plans, brochure, enquiry form) appears stuck on
+  its skeleton under automation while being fine for a real reader. Likewise a
+  `fixed` header photographed halfway down the page while `getBoundingClientRect`
+  reports `top: 0`.
+
+  **Trust DOM assertions; do not trust pictures.** Several hours went into
+  chasing bugs that were stale frames. When something looks broken, query the
+  DOM for it before believing the screenshot.
 
 ---
 
@@ -176,107 +212,59 @@ designed fallback, cross-faded via a new `dimmed` prop.
 
 ---
 
-## 5. What is IN PROGRESS — Phase 4, onboarding gate
+## 5. Phase 4 — onboarding gate (complete)
 
-**Built so far (all compile clean, nothing imports them yet, so the site is
-unaffected):**
+A first-visit, skippable gate. `lib/visitor-storage.ts` persists the name
+locally and nothing else; `lib/agent-script.ts` keeps audio path, caption and
+duration on one object; `components/onboarding/` holds the rig contract, the
+primitives placeholder, the lip-sync analyser, the scene and the state machine.
 
-- `lib/visitor-storage.ts` — `useVisitor()`, `rememberName()`, `rememberSkip()`,
-  `forgetVisitor()`, `sanitiseName()`. Module-scope store +
-  `useSyncExternalStore`; server snapshot always `null`. Carries the DPDP
-  reasoning in its docblock — read it before changing anything about where the
-  name goes.
-- `lib/agent-script.ts` — `AGENT_SCRIPT`, `THANKS_LINE`, `thanksCaption()`.
-  Audio path, caption and `durationHint` on one object.
-- `components/onboarding/agent-rig.ts` — the `AgentRig` contract plus
-  `useBlinkTimer()`, `useSaccade()`, `applyLook()`, `LOOK_LIMITS`, `useRestPose()`.
-- `components/onboarding/agent-placeholder.tsx` — the primitives stand-in,
-  driving the same behaviour the real GLB will.
+Three faults were fixed to make it visible at all, and each is a trap worth not
+re-treading: SceneFrame's resize nudge fired before R3F attached its observer
+(see the box at the top of this file); a second `<Environment>` nested inside
+the children boundary held every sibling unmounted; and the figure sat at
+y = -1.3, putting her head below a camera looking horizontally from 1.45.
 
-**Still to build:**
+Constraints that still hold and should not be quietly dropped:
 
-- `components/onboarding/use-lip-sync.ts` — Web Audio `AnalyserNode` → RMS →
-  mouth openness ref. Should prefer a pre-baked viseme JSON if one exists beside
-  the MP3, and fall back to amplitude otherwise.
-- `components/onboarding/agent-scene.tsx` — `<SceneFrame transparent>` with a
-  portrait camera (**fov ≤ 30** — a wide lens on a face is an uncanny tell),
-  three-point lighting, and a bright strip Lightformer camera-right for the eye
-  catchlight. Pose her ~12° off-axis; perfectly frontal reads as a mugshot.
-- `components/onboarding/agent-avatar.tsx` — the real RPM GLB via drei
-  `useGLTF`. **Not yet written; the placeholder is the current implementation.**
-- `components/onboarding/deferred-agent-scene.tsx` — `dynamic(ssr:false)`,
-  following the repo's `deferred-*` convention.
-- `components/onboarding/onboarding-gate.tsx` — the overlay and state machine.
-- Wiring: mount the gate **last inside `<MotionProvider>`** in `app/layout.tsx`,
-  at `z-[90]`; mark siblings `inert` while open; `lenis.stop()` + body overflow
-  lock; consume the name in `components/forms/enquiry-form.tsx` `defaultValues`
-  and as a client-only "Welcome back" line in the hero.
+- **The gate renders nothing on the server.** Verify with
+  `curl -s localhost:3111/ | grep -c 'Meet Aanya'` — it must be 0, while the
+  `<h1>` and the GujRERA link are present.
+- **Audio is gesture-gated**, with captions carrying the line regardless.
+  `CLAUDE.md` §6 lists autoplay audio under *Avoid*, and browsers block it
+  anyway. Test in Safari: iOS respects the hardware mute switch even after a
+  valid gesture.
+- **The name never leaves the browser** while the gate's copy says it does not.
+  Logging it to analytics would make that copy a false statement.
 
-### Design constraints for the gate — these are not negotiable
+## 6. Phase 5 — apartment walkthrough (complete)
 
-- **It must render nothing on the server.** Client-only, returns `null` until an
-  effect confirms first-visit. The server HTML must stay byte-identical so
-  crawlers never meet a wall. Verify with
-  `curl -s localhost:3111/ | grep -c '<h1'`.
-- **Autoplay is the biggest UX trap.** Browsers block audio without a gesture,
-  and `CLAUDE.md` §6 independently lists autoplay audio under *Avoid*. The
-  design: the avatar is visible, breathing, blinking and already tracking the
-  cursor **in silence**; `audio.play()` is attempted optimistically; on rejection
-  a single "Meet Aanya" control appears and that click unlocks audio. The name
-  input and a visible **Skip** are usable throughout. **Captions render the line
-  as text regardless** — so the silent path is complete, not degraded. Test in
-  Safari; iOS respects the hardware mute switch even after a valid gesture.
-- **A pre-baked viseme track makes the silent path non-degraded** (she mouths
-  the words with no audio). That is the argument for it over amplitude.
-- Escape hatches: visible Skip, `Escape` key, `?nogate=1`, and a ~6 s failsafe so
-  a failed chunk can never permanently occlude the site.
-- The stacking order is documented as a comment block in `app/globals.css`.
-  Gate `z-[90]`, skip link `z-[110]`.
+Walls extruded from `lib/floor-plans.ts`, furnished by
+`lib/interior-furniture.ts` (26–55 pieces depending on configuration, each
+guarded against exceeding 55% of its room's floor area), camera on a
+Catmull-Rom spline through the rooms at eye height, looking five metres ahead
+with the aim damped slower than the position.
 
----
+Two things that made it a black box before, both fixed: it had **no windows**,
+so no daylight could enter and the city outside was invisible; and the lens was
+**fov 38**, a telephoto inside a 14-metre flat. Alternate exterior bays are now
+opened into sill-and-lintel windows and the lens is 62.
 
-## 6. What REMAINS
-
-**Phase 5 — 3D apartment interior.** Extrude `lib/floor-plans.ts` rooms
-(`{x,y,w,h,share,kind}` on a unitless grid) into walls/slabs. Derive metres from
-the existing `roomDimensions()` helper so the 3D agrees with the printed
-dimensions — a visitor who spots a mismatch stops trusting the page, and an
-interior implying more area than the sold carpet area is a RERA §12 exposure.
-Extract walls by **counting rooms either side of each grid edge** (1 = exterior,
-2 = partition), not by extruding each room's outline — that gives coincident
-faces and z-fighting. Camera on a Catmull-Rom spline through room centroids with
-a waypoint at each doorway; eye height 1.6 m; no roll, ever. Replaces the
-`PannellumTour` section on `/projects/[slug]` (its panorama is 1024×512, about a
-quarter of usable resolution); keep `pannellum-tour.tsx` on disk with a TODO for
-when real 8K panoramas of completed flats exist. `FloorPlanViewer` stays beneath
-as the crawlable, keyboard-operable twin — the same pairing as
-`MasterPlan` / `UnitMatrix`.
-
-**Phase 6 — polish.** Pointer-look on `master-plan-3d.tsx`; designed fallbacks
-everywhere 3D is refused (`master-plan.tsx` currently renders an **empty
-zero-height div**); remove `pannellum`, `@gsap/react` (never imported), `shadcn`
-(the `@import "shadcn/tailwind.css"` resolves to nothing, no `components/ui/`
-exists), and the dead `hero-canvas.tsx` / `hero-scene.tsx`; rewrite the stale
-README sections; keyboard and screen-reader pass.
-
-**Open item #8:** under automation the `LazyMount` IntersectionObserver for the
-floor-plan viewer did not fire and the renderer froze under rapid programmatic
-scrolling. Confirmed **not** a regression (the Phase 1 diff touched only CSS
-classes and tokens). Needs a human scroll-through of
-`/projects/kautilya-two20`.
-
----
+`components/three/city-backdrop.tsx` places the `public/glb` models, fitting
+each to a target height from its own measured bounding box — the files disagree
+about units by four orders of magnitude, so a hardcoded multiplier is only ever
+right for one of them. `lib/glb-catalog.ts` records what is actually in each
+file and which two are deliberately unused.
 
 ## 7. Corrections to existing docs
 
-- **`README.md` "Three deliberate stack deviations" is false.** It claims
-  MapLibre, Pannellum and Framer Motion were removed. All three are installed
-  and actively imported — commit `c85c131` restored them and the README was
-  never updated. Its performance table is also now inaccurate.
-- `components/hero/hero-canvas.tsx` and `hero-scene.tsx` are **dead code**, zero
-  importers. Delete in Phase 6.
+- The README's false "Three deliberate stack deviations" section is gone, and
+  its stale performance table with it. Pannellum has since been removed for
+  real; MapLibre and Framer Motion are still installed and in use.
+- `hero-canvas.tsx` / `hero-scene.tsx` were dead code and are deleted.
 - `rera-block.tsx` gates an extra warning on `reraNumber === "DEMO-PENDING"`,
   but the placeholder data uses `"AWAITING CLIENT"` — so that branch never runs.
+  Worth reconciling when the real numbers land.
 - The placeholder projects are thin: all 12 have `priceOnRequest: true`, no
   `startingPrice`, no `possession`, `specifications: []`, `progress: []`,
   `carpetArea: 0`. Consequently the Money, Specifications and Progress sections
