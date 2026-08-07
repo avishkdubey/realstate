@@ -5,6 +5,8 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
+import { usePointerLook } from "@/components/three/use-pointer-look";
+
 import { formatPrice } from "@/lib/format";
 import type { Tower } from "@/lib/types";
 
@@ -37,17 +39,19 @@ export function MasterPlan3D({ towers }: { towers: Tower[] }) {
           <directionalLight position={[5, 10, 6]} intensity={1.5} color="#f5f1e8" />
           <directionalLight position={[-6, 4, -5]} intensity={0.35} color="#b99c6b" />
 
-          <Site />
-          {towers.map((tower, index) => (
-            <TowerMesh
-              key={tower.id}
-              tower={tower}
-              index={index}
-              count={towers.length}
-              selected={tower.id === selected}
-              onSelect={() => setSelected(tower.id)}
-            />
-          ))}
+          <InteractiveGroup>
+            <Site />
+            {towers.map((tower, index) => (
+              <TowerMesh
+                key={tower.id}
+                tower={tower}
+                index={index}
+                count={towers.length}
+                selected={tower.id === selected}
+                onSelect={() => setSelected(tower.id)}
+              />
+            ))}
+          </InteractiveGroup>
 
           <OrbitControls
             enablePan={false}
@@ -126,6 +130,20 @@ export function MasterPlan3D({ towers }: { towers: Tower[] }) {
       </div>
     </div>
   );
+}
+
+function InteractiveGroup({ children }: { children: React.ReactNode }) {
+  const group = useRef<THREE.Group>(null);
+  const look = usePointerLook({ strength: 0.3 });
+
+  useFrame(() => {
+    if (!group.current) return;
+    // Provide a subtle tilt based on pointer position.
+    group.current.rotation.x = look.current.y * 0.1;
+    group.current.rotation.y = look.current.x * 0.1;
+  });
+
+  return <group ref={group}>{children}</group>;
 }
 
 function TowerMesh({

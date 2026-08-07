@@ -60,13 +60,33 @@ export function MasterPlan({ towers }: { towers: Tower[] }) {
 
   return (
     <div ref={wrapper}>
-      {allowed && (
-        <WebGLBoundary>
+      {allowed ? (
+        <WebGLBoundary fallback={<PlanFallback towers={towers} />}>
           <div className="mb-16">
             <MasterPlan3D towers={towers} />
           </div>
         </WebGLBoundary>
+      ) : (
+        <PlanFallback towers={towers} />
       )}
+    </div>
+  );
+}
+
+function PlanFallback({ towers }: { towers: Tower[] }) {
+  return (
+    <div className="bg-surface-1 w-full border border-border mb-16 p-10 flex flex-col items-center justify-center min-h-[300px]">
+      <div className="flex flex-wrap justify-center gap-6">
+        {towers.map(tower => (
+          <div key={tower.id} className="bg-surface-2 border border-border p-6 rounded-sm text-center min-w-[140px]">
+             <h3 className="text-ivory eyebrow">{tower.name}</h3>
+             <p className="text-caption text-muted-foreground mt-2">{tower.floors} floors</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-caption text-muted-foreground mt-8 text-center max-w-sm">
+        Interactive 3D model is unavailable. The availability table below carries all unit information in full.
+      </p>
     </div>
   );
 }

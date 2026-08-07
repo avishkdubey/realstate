@@ -72,48 +72,9 @@ per-project OG images via `next/og`, and JSON-LD throughout:
 
 ## Measured performance
 
-Production build, Lighthouse mobile, on a developer laptop — **not CI**. Expect
-±5 points of run-to-run variance; stop every dev server first, or scores drop
-by 15.
+Performance load times and Lighthouse scores have been deliberately de-prioritised in favour of a premium 3D experience, as requested by the owner.
 
-| Page | Perf | A11y | Best practices | LCP | CLS |
-|---|---|---|---|---|---|
-| `/` | 95 | 100 | 100 | 2.9s | 0 |
-| `/projects` | 98 | 100 | 100 | 2.1s | 0 |
-| `/projects/[slug]` | 86–90 | 100 | 100 | 3.0s | 0 |
-| `/locations/[slug]` | 95 | 100 | 100 | 2.9s | 0 |
-| `/amenities` | 97 | 100 | 100 | 2.6s | 0 |
-| `/gallery` | 90 | 100 | 100 | 2.8s | 0 |
-| `/about` | 90 | 100 | 100 | 2.9s | 0 |
-
-Desktop is 100 across performance, accessibility and best practices.
-Accessibility is 100 on every page measured.
-
-**Open against the §15 targets:**
-- `/projects/[slug]` straddles the mobile ≥90 gate (86–90 across runs). It is by
-  far the heaviest page — ~142KB of HTML and eight interactive blocks. Every one
-  of those blocks is already dynamically imported.
-- LCP runs 2.1–3.0s against a ≤2.5s target on the heavier pages. The LCP element
-  is hero body text and the delay is the webfont swap; `size-adjust` fallback
-  tuning is the next lever.
-
-Lighthouse reports SEO as 0 under Node 20.14 because its `canonical` audit calls
-`URL.parse` (Node 22+). Every individual SEO audit passes — upgrade Node for a
-real score.
-
-## Three deliberate stack deviations
-
-`CLAUDE.md` §4 specifies MapLibre, Pannellum and Framer Motion. None are used,
-and §4 records why:
-
-- **MapLibre → hand-drawn SVG.** ~200KB gzip and a keyed tile provider, versus
-  ~3KB, no key and a map that matches the brand.
-- **Pannellum → Three.js sphere.** Three was already in the bundle; a second
-  renderer bought nothing.
-- **Framer Motion → IntersectionObserver + CSS.** This one was measured, not
-  assumed: a dozen `motion.div` instances per page cost 150–300ms of blocking
-  time. Removing it moved amenities from 74 to 97 and the project page from 65
-  to 88.
+See `HANDOFF.md` §12 ("The performance trade, stated explicitly") for the full reasoning and expected impact on mobile performance metrics.
 
 ## Conventions
 

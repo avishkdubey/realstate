@@ -1,7 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
 /* Vestigial. Nothing applies `.dark` any more — the site is permanently dark and
    the dark values live on `:root`. Kept only so a stray `dark:` variant from a
    vendored stylesheet still compiles. */
