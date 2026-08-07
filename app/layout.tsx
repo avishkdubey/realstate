@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope, Noto_Sans_Gujarati } from "next/font/google";
 
 import { FestiveBanner } from "@/components/layout/festive-banner";
@@ -12,6 +12,7 @@ import { ReducedMotionProvider } from "@/components/providers/reduced-motion-pro
 import { JsonLd } from "@/components/seo/json-ld";
 import { siteConfig } from "@/lib/site-config";
 import { organizationSchema } from "@/lib/structured-data";
+import { OnboardingGate } from "@/components/onboarding/onboarding-gate";
 
 import "./globals.css";
 
@@ -70,6 +71,14 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+/* Mobile browser chrome should match the page ground, or Chrome on Android
+   draws an ivory address bar above a near-black site. `colorScheme` is declared
+   here as well as on :root so the UA knows before the stylesheet lands. */
+export const viewport: Viewport = {
+  themeColor: "#0d0d0d",
+  colorScheme: "dark",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -80,22 +89,25 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <JsonLd data={organizationSchema()} />
         <ReducedMotionProvider>
           <MotionProvider>
-            <LenisProvider />
-            <a
-              href="#main"
-              className="bg-charcoal text-ivory sr-only focus:not-sr-only focus:fixed focus:left-6 focus:top-6 focus:z-[60] focus:rounded-sm focus:px-4 focus:py-3"
-            >
-              Skip to content
-            </a>
-            <SiteHeader />
-            <FestiveBanner />
-            {/* pb-16 clears the sticky mobile action bar. */}
-            <main id="main" className="flex-1 pb-16 lg:pb-0">
-              {children}
-            </main>
-            <SiteFooter />
-            <WhatsAppFab />
-            <StickyMobileActionBar />
+            <div id="app-content" className="flex-1 flex flex-col w-full">
+              <LenisProvider />
+              <a
+                href="#main"
+                className="bg-gold text-charcoal sr-only focus:not-sr-only focus:fixed focus:left-6 focus:top-6 focus:z-[110] focus:rounded-sm focus:px-4 focus:py-3"
+              >
+                Skip to content
+              </a>
+              <SiteHeader />
+              <FestiveBanner />
+              {/* pb-16 clears the sticky mobile action bar. */}
+              <main id="main" className="flex-1 pb-16 lg:pb-0">
+                {children}
+              </main>
+              <SiteFooter />
+              <WhatsAppFab />
+              <StickyMobileActionBar />
+            </div>
+            <OnboardingGate />
           </MotionProvider>
         </ReducedMotionProvider>
       </body>

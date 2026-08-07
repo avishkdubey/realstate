@@ -1,3 +1,4 @@
+import { STAGE_FILL, STAGE_LABELS } from "@/lib/construction-stages";
 import { formatMonth } from "@/lib/format";
 import type { Project } from "@/lib/types";
 
@@ -27,7 +28,7 @@ export function ProgressTimeline({ entries }: { entries: Entry[] }) {
           <span>
             <span className="block text-base">{entry.caption}</span>
             {entry.stage && (
-              <span className="eyebrow text-bronze mt-2 block">
+              <span className="eyebrow text-accent mt-2 block">
                 {STAGE_LABELS[entry.stage]}
               </span>
             )}
@@ -38,23 +39,6 @@ export function ProgressTimeline({ entries }: { entries: Entry[] }) {
     </ol>
   );
 }
-
-const STAGE_LABELS: Record<NonNullable<Entry["stage"]>, string> = {
-  excavation: "Site works",
-  foundation: "Foundation",
-  structure: "Superstructure",
-  finishing: "Finishing",
-  handover: "Handover",
-};
-
-/** How far up the building has got, at a glance. */
-const STAGE_FILL: Record<NonNullable<Entry["stage"]>, number> = {
-  excavation: 0.1,
-  foundation: 0.3,
-  structure: 0.6,
-  finishing: 0.85,
-  handover: 1,
-};
 
 function StageGlyph({ stage }: { stage: NonNullable<Entry["stage"]> }) {
   const fill = STAGE_FILL[stage];
@@ -78,7 +62,7 @@ function StageGlyph({ stage }: { stage: NonNullable<Entry["stage"]> }) {
             width={28}
             height={6}
             className={
-              i < built ? "fill-[var(--forest)]" : "fill-[var(--border)]"
+              i < built ? "fill-[var(--forest-lift)]" : "fill-[var(--border)]"
             }
           />
         );

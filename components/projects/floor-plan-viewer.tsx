@@ -121,7 +121,7 @@ export function FloorPlanViewer({ options }: { options: PlanOption[] }) {
               className={cn(
                 "eyebrow rounded-sm border px-4 py-2 transition-colors duration-200",
                 index === active
-                  ? "bg-charcoal text-ivory border-charcoal"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
               )}
             >
@@ -174,7 +174,7 @@ export function FloorPlanViewer({ options }: { options: PlanOption[] }) {
                 <text
                   x={plan.entry.x + 1}
                   y={plan.entry.y + 0.3}
-                  className="fill-[var(--stone)]"
+                  className="fill-[var(--stone-2)]"
                   style={{ fontSize: 0.9 }}
                 >
                   Entry
@@ -237,11 +237,15 @@ export function FloorPlanViewer({ options }: { options: PlanOption[] }) {
 }
 
 function RoomShape({ room, carpetArea }: { room: Room; carpetArea: number }) {
+  /* On the ivory site the habitable rooms were tinted cream and ivory — lighter
+     than the page, so they read as "floor". Inverted, the same idea is a step
+     *up* the elevation ramp: living is the brightest surface, bedrooms one
+     below, wet and service areas left as open ground. */
   const fill =
     room.kind === "living"
-      ? "fill-[var(--cream)]"
+      ? "fill-[var(--surface-3)]"
       : room.kind === "bedroom"
-        ? "fill-[var(--ivory)]"
+        ? "fill-[var(--surface-2)]"
         : "fill-transparent";
 
   return (
@@ -251,14 +255,14 @@ function RoomShape({ room, carpetArea }: { room: Room; carpetArea: number }) {
         y={room.y}
         width={room.w}
         height={room.h}
-        className={cn(fill, "stroke-[var(--stone)]")}
+        className={cn(fill, "stroke-[var(--stone-2)]")}
         strokeWidth={0.12}
       />
       <text
         x={room.x + room.w / 2}
         y={room.y + room.h / 2 - 0.3}
         textAnchor="middle"
-        className="fill-[var(--charcoal)]"
+        className="fill-[var(--ivory)]"
         style={{ fontSize: 0.85, letterSpacing: 0.02 }}
       >
         {room.name}
@@ -267,7 +271,7 @@ function RoomShape({ room, carpetArea }: { room: Room; carpetArea: number }) {
         x={room.x + room.w / 2}
         y={room.y + room.h / 2 + 1}
         textAnchor="middle"
-        className="fill-[var(--stone)]"
+        className="fill-[var(--stone-2)]"
         style={{ fontSize: 0.7 }}
       >
         {roomDimensions(room, carpetArea)}
@@ -291,7 +295,7 @@ function Compass({ facing }: { facing: Facing }) {
           x={0}
           y={-9.5}
           textAnchor="middle"
-          className="fill-[var(--stone)]"
+          className="fill-[var(--stone-2)]"
           style={{ fontSize: 4 }}
         >
           N

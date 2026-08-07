@@ -121,7 +121,7 @@ function FilterRow({
             className={cn(
               "eyebrow rounded-sm border px-4 py-2 transition-colors duration-200",
               active === option.value
-                ? "bg-charcoal text-ivory border-charcoal"
+                ? "bg-primary text-primary-foreground border-primary"
                 : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
             )}
           >
@@ -179,7 +179,7 @@ function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label="Gallery"
-      className="bg-charcoal/95 fixed inset-0 z-[60] flex flex-col"
+      className="bg-surface-0/97 fixed inset-0 z-[60] flex flex-col"
     >
       <div className="flex items-center justify-between p-6">
         <p className="eyebrow text-ivory/70">

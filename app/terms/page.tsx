@@ -12,7 +12,7 @@ export default function TermsPage() {
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Legal</p>
+        <p className="eyebrow text-accent">Legal</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">Terms of Use</h1>
         <p className="measure text-muted-foreground mt-6">
           These terms govern your use of this website. They do not limit any

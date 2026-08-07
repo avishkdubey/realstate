@@ -25,7 +25,7 @@ export default async function LocationsPage() {
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Micro-markets</p>
+        <p className="eyebrow text-accent">Micro-markets</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">
           Six corridors, and what each one is really like.
         </h1>

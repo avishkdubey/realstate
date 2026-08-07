@@ -13,7 +13,7 @@ import { telLink, whatsappLink } from "@/lib/whatsapp";
  */
 export function StickyMobileActionBar() {
   return (
-    <div className="bg-charcoal text-ivory fixed inset-x-0 bottom-0 z-50 grid grid-cols-3 border-t border-white/10 lg:hidden">
+    <div className="bg-surface-1 fixed inset-x-0 bottom-0 z-50 grid grid-cols-3 border-t border-hairline lg:hidden">
       <a
         href={telLink()}
         className="eyebrow flex items-center justify-center gap-2 py-4"
@@ -25,7 +25,7 @@ export function StickyMobileActionBar() {
         href={whatsappLink()}
         target="_blank"
         rel="noopener noreferrer"
-        className="eyebrow flex items-center justify-center gap-2 border-x border-white/10 py-4"
+        className="eyebrow flex items-center justify-center gap-2 border-x border-hairline py-4"
       >
         <MessageCircle size={16} aria-hidden />
         WhatsApp

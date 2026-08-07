@@ -26,14 +26,14 @@ export default async function ReraDisclosurePage() {
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Statutory</p>
+        <p className="eyebrow text-accent">Statutory</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">RERA Disclosure</h1>
         <p className="measure text-muted-foreground mt-6">
           Registration details for every project we advertise, and the
           disclaimers that apply to everything shown on this website.
         </p>
 
-        <div className="bg-cream border-bronze mt-12 border-l-2 p-6">
+        <div className="bg-surface-2 border-accent mt-12 border-l-2 p-6">
           <p className="measure text-small leading-relaxed">
             <strong>This is a demonstration build.</strong> No project listed
             below holds a live registration, and every number reads

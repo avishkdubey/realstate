@@ -44,10 +44,15 @@ export function SiteHeader() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-colors duration-300 ease-[var(--ease-transition)]",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,backdrop-filter,border-color] duration-300 ease-[var(--ease-transition)]",
+        /* On the old ivory site these two states differed by colour: dark text on
+           a light bar, or ivory text over the dark hero. Both grounds are dark
+           now, so colour can no longer carry the distinction — material does.
+           Scrolled becomes a frosted pane with a hairline; over the hero it stays
+           fully transparent so the 3D reads edge to edge. */
         solid
-          ? "bg-background text-foreground border-b border-border"
-          : "text-ivory bg-transparent",
+          ? "bg-background/75 border-b border-hairline backdrop-blur-md"
+          : "border-b border-transparent bg-transparent",
       )}
     >
       <div className="container-page flex h-20 items-center justify-between gap-8">

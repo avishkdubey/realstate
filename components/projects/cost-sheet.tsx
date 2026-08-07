@@ -20,7 +20,7 @@ export function CostSheet({
   return (
     <div className="border border-border">
       <div className="border-b border-border p-6">
-        <p className="eyebrow text-bronze">What it actually costs</p>
+        <p className="eyebrow text-accent">What it actually costs</p>
         <p className="measure text-small text-muted-foreground mt-3">
           The agreement value is the number everyone quotes. These are the rest
           of them.

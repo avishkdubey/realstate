@@ -59,7 +59,7 @@ export default function RouteError({
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Something went wrong</p>
+        <p className="eyebrow text-accent">Something went wrong</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">
           This page didn&apos;t load.
         </h1>
@@ -73,7 +73,7 @@ export default function RouteError({
           <button
             type="button"
             onClick={reset}
-            className="eyebrow bg-charcoal text-ivory rounded-sm px-8 py-4"
+            className="eyebrow bg-primary text-primary-foreground rounded-sm px-8 py-4"
           >
             Try again
           </button>

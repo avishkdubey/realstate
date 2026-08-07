@@ -90,7 +90,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       {project.faqs.length > 0 && <JsonLd data={faqSchema(project.faqs)} />}
 
       {/* Hero. Above the fold: what it is, where it is, what it costs. */}
-      <section className="bg-charcoal text-ivory pt-32">
+      <section className="bg-surface-2 pt-32">
         <div className="container-page pb-16">
           <nav aria-label="Breadcrumb" className="eyebrow text-stone-2">
             <Link href="/projects" className="hover:text-ivory transition-colors">
@@ -137,7 +137,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       <section className="section">
         <div className="container-page grid gap-16 lg:grid-cols-[1fr_1.2fr]">
           <FadeInView>
-            <p className="eyebrow text-bronze">Why this one</p>
+            <p className="eyebrow text-accent">Why this one</p>
           </FadeInView>
           <FadeInView delay={0.05}>
             <ul className="space-y-6">
@@ -152,11 +152,11 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       </section>
 
       {/* Availability */}
-      <section className="section bg-cream/50">
+      <section className="section bg-surface-2">
         <div className="container-page">
           <div className="flex flex-wrap items-baseline justify-between gap-4">
             <div>
-              <p className="eyebrow text-bronze">Availability</p>
+              <p className="eyebrow text-accent">Availability</p>
               <h2 className="mt-6 text-h4">
                 {available > 0
                   ? `${available} homes available`
@@ -182,7 +182,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       {/* Floor plans */}
       <section className="section">
         <div className="container-page">
-          <p className="eyebrow text-bronze">Floor plans</p>
+          <p className="eyebrow text-accent">Floor plans</p>
           <h2 className="measure mt-6 text-h4">
             Every layout, with its facing labelled.
           </h2>
@@ -202,9 +202,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
       {/* 360° view. Matters most to buyers who will never stand in the
           building before deciding — which describes most NRI purchases. */}
-      <section className="section bg-cream/50">
+      <section className="section bg-surface-2">
         <div className="container-page">
-          <p className="eyebrow text-bronze">360° view</p>
+          <p className="eyebrow text-accent">360° view</p>
           <h2 className="measure mt-6 text-h4">
             Look around before you fly in.
           </h2>
@@ -219,9 +219,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
       {/* Money */}
       {basePrice && (
-        <section className="section bg-cream/50">
+        <section className="section bg-surface-2">
           <div className="container-page">
-            <p className="eyebrow text-bronze">The money</p>
+            <p className="eyebrow text-accent">The money</p>
             <h2 className="measure mt-6 text-h4">
               What you would pay, and what you would pay monthly.
             </h2>
@@ -244,7 +244,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       {amenities.length > 0 && (
         <section className="section">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Amenities</p>
+            <p className="eyebrow text-accent">Amenities</p>
             <div className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
               {amenities.map((amenity) => (
                 <div key={amenity.id} className="border-t border-border pt-6">
@@ -261,9 +261,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
       {/* Specifications */}
       {project.specifications.length > 0 && (
-        <section className="section bg-cream/50">
+        <section className="section bg-surface-2">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Specifications</p>
+            <p className="eyebrow text-accent">Specifications</p>
             <div className="mt-12 grid gap-12 md:grid-cols-2">
               {project.specifications.map((group) => (
                 <div key={group.group}>
@@ -286,7 +286,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       {project.progress.length > 0 && (
         <section className="section">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Construction progress</p>
+            <p className="eyebrow text-accent">Construction progress</p>
             <h2 className="measure mt-6 text-h4">
               Dated updates, published whether or not they are flattering.
             </h2>
@@ -303,9 +303,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
       {/* FAQs — also emitted as FAQPage structured data above. */}
       {project.faqs.length > 0 && (
-        <section className="section bg-cream/50">
+        <section className="section bg-surface-2">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Questions</p>
+            <p className="eyebrow text-accent">Questions</p>
             <dl className="mt-12 max-w-3xl">
               {project.faqs.map((faq) => (
                 <div key={faq.q} className="border-t border-border py-8">
@@ -322,7 +322,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       <section className="section">
         <div className="container-page grid gap-16 lg:grid-cols-2">
           <div>
-            <p className="eyebrow text-bronze">Enquire</p>
+            <p className="eyebrow text-accent">Enquire</p>
             <h2 className="measure mt-6 text-h4">
               Two fields, and someone calls you back.
             </h2>
@@ -338,7 +338,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
               })}
               target="_blank"
               rel="noopener noreferrer"
-              className="eyebrow bg-forest text-ivory mt-8 inline-block rounded-sm px-8 py-4"
+              className="eyebrow bg-forest-lift text-ivory mt-8 inline-block rounded-sm px-8 py-4"
             >
               WhatsApp about {project.name}
             </a>

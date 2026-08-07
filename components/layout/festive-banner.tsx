@@ -15,7 +15,7 @@ export function FestiveBanner() {
   if (!offer.active || !offer.label) return null;
 
   return (
-    <aside className="bg-forest text-ivory">
+    <aside className="bg-forest-lift text-ivory">
       <div className="container-page flex flex-wrap items-center justify-between gap-4 py-4">
         <p className="text-small">{offer.label}</p>
         <Link

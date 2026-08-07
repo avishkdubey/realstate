@@ -52,7 +52,7 @@ export function BrochureDownload({ project }: { project: Project }) {
 
   return (
     <div className="border border-border p-8">
-      <p className="eyebrow text-bronze">Brochure</p>
+      <p className="eyebrow text-accent">Brochure</p>
 
       {/* Facts the client has not supplied yet are omitted rather than shown
           as blanks or zeroes. */}
@@ -72,7 +72,7 @@ export function BrochureDownload({ project }: { project: Project }) {
         <button
           type="button"
           onClick={download}
-          className="eyebrow bg-charcoal text-ivory rounded-sm px-8 py-4 transition-opacity duration-200 hover:opacity-90"
+          className="eyebrow bg-primary text-primary-foreground rounded-sm px-8 py-4 transition-opacity duration-200 hover:opacity-90"
         >
           Download — no details needed
         </button>
@@ -97,7 +97,7 @@ export function BrochureDownload({ project }: { project: Project }) {
               required
               minLength={2}
               autoComplete="name"
-              className="mt-2 w-full border-0 border-b border-border bg-transparent py-3 outline-none focus:border-bronze"
+              className="mt-2 w-full border-0 border-b border-border bg-transparent py-3 outline-none focus:border-accent"
             />
           </label>
           <label className="block">
@@ -110,7 +110,7 @@ export function BrochureDownload({ project }: { project: Project }) {
               inputMode="tel"
               autoComplete="tel"
               pattern="^(\+?91[-\s]?|0)?[6-9]\d{9}$"
-              className="mt-2 w-full border-0 border-b border-border bg-transparent py-3 outline-none focus:border-bronze"
+              className="mt-2 w-full border-0 border-b border-border bg-transparent py-3 outline-none focus:border-accent"
             />
           </label>
 
@@ -120,7 +120,7 @@ export function BrochureDownload({ project }: { project: Project }) {
             <button
               type="submit"
               disabled={sending}
-              className="eyebrow bg-charcoal text-ivory rounded-sm px-8 py-4 disabled:opacity-50"
+              className="eyebrow bg-primary text-primary-foreground rounded-sm px-8 py-4 disabled:opacity-50"
             >
               {sending ? "Sending…" : "Send and download"}
             </button>
@@ -131,7 +131,7 @@ export function BrochureDownload({ project }: { project: Project }) {
               })}
               target="_blank"
               rel="noopener noreferrer"
-              className="eyebrow text-bronze border-b border-current pb-1"
+              className="eyebrow text-accent border-b border-current pb-1"
             >
               Or ask on WhatsApp
             </a>

@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">404</p>
+        <p className="eyebrow text-accent">404</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">
           This address doesn&apos;t exist.
         </h1>
@@ -15,7 +15,7 @@ export default function NotFound() {
         <div className="mt-10 flex flex-wrap gap-4">
           <Link
             href="/projects"
-            className="eyebrow bg-charcoal text-ivory rounded-sm px-8 py-4"
+            className="eyebrow bg-primary text-primary-foreground rounded-sm px-8 py-4"
           >
             View Projects
           </Link>

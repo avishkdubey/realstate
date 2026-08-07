@@ -16,7 +16,7 @@ export default function ChannelPartnersPage() {
     <>
       <section className="section pt-40">
         <div className="container-page">
-          <p className="eyebrow text-bronze">For brokers</p>
+          <p className="eyebrow text-accent">For brokers</p>
           <h1 className="measure mt-6 text-h3 md:text-h2">Channel partners</h1>
           <p className="measure text-muted-foreground mt-6">
             We work with a small number of registered partners rather than a
@@ -45,7 +45,7 @@ export default function ChannelPartnersPage() {
                   })}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="eyebrow bg-forest text-ivory rounded-sm px-8 py-4"
+                  className="eyebrow bg-forest-lift text-ivory rounded-sm px-8 py-4"
                 >
                   Ask on WhatsApp
                 </a>

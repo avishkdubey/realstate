@@ -17,7 +17,7 @@ export default function ContactPage() {
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Talk to us</p>
+        <p className="eyebrow text-accent">Talk to us</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">Contact</h1>
         <p className="measure text-muted-foreground mt-6">
           The fastest route is WhatsApp — it reaches the sales desk directly and
@@ -32,7 +32,7 @@ export default function ContactPage() {
                 href={whatsappLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="eyebrow bg-forest text-ivory rounded-sm px-8 py-4"
+                className="eyebrow bg-forest-lift text-ivory rounded-sm px-8 py-4"
               >
                 WhatsApp
               </a>

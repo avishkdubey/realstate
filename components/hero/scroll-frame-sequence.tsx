@@ -34,6 +34,8 @@ export function ScrollFrameSequence({
   poster,
   className,
   children,
+  sectionRef,
+  dimmed = false,
 }: {
   frameCount: number;
   /** Given a 1-based index, returns that frame's URL. */
@@ -42,6 +44,18 @@ export function ScrollFrameSequence({
   poster: string;
   className?: string;
   children?: React.ReactNode;
+  /**
+   * Lets a parent measure the same scroll container this sequence measures.
+   * The 3D hero drives its camera from exactly this element, so the two
+   * backdrops stay in step and a hand-off between them is invisible.
+   */
+  sectionRef?: React.RefObject<HTMLElement | null>;
+  /**
+   * Fades the imagery out while keeping it mounted. Used when the 3D scene
+   * takes over — unmounting would mean a blank frame if the GPU later drops
+   * the context and we need this back.
+   */
+  dimmed?: boolean;
 }) {
   const section = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -166,24 +180,41 @@ export function ScrollFrameSequence({
   const active = hasPainted && !reducedMotion;
 
   return (
-    <div ref={section} className={className}>
+    <div
+      ref={(node) => {
+        section.current = node;
+        // Publish the same element the parent may want to measure. Assigning
+        // through the callback rather than accepting a forwarded ref keeps the
+        // internal rAF loop reading a ref this component definitely owns.
+        if (sectionRef) sectionRef.current = node;
+      }}
+      className={className}
+    >
       <div className="sticky top-0 h-svh w-full overflow-hidden">
-        {/* Always present, so there is never an empty frame. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={poster}
-          alt=""
-          aria-hidden
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <canvas
-          ref={canvas}
-          aria-hidden
-          className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
-            active ? "opacity-100" : "opacity-0"
+        {/* The imagery is a single unit so the 3D hand-off is one fade rather
+            than two that can drift apart. */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            dimmed ? "opacity-0" : "opacity-100"
           }`}
-        />
+        >
+          {/* Always present, so there is never an empty frame. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={poster}
+            alt=""
+            aria-hidden
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <canvas
+            ref={canvas}
+            aria-hidden
+            className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
+              active ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        </div>
         {children}
       </div>
     </div>

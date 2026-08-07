@@ -33,7 +33,7 @@ export function ProjectImage({
   }
 
   return (
-    <div className={cn("bg-charcoal relative overflow-hidden", className)}>
+    <div className={cn("bg-surface-2 relative overflow-hidden", className)}>
       <Image
         src={src}
         alt={alt}

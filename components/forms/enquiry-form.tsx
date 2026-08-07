@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -12,6 +12,7 @@ import {
 } from "@/lib/enquiry-schema";
 import { whatsappLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
+import { useVisitor } from "@/lib/visitor-storage";
 
 /**
  * The enquiry form.
@@ -38,11 +39,19 @@ export function EnquiryForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<EnquiryInput>({
     resolver: zodResolver(enquirySchema),
     defaultValues: { projectSlug, source, isNri: false, consent: false },
   });
+
+  const visitor = useVisitor();
+  useEffect(() => {
+    if (visitor?.name) {
+      setValue("name", visitor.name);
+    }
+  }, [visitor?.name, setValue]);
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -73,7 +82,7 @@ export function EnquiryForm({
           href={whatsappLink({ project: projectName })}
           target="_blank"
           rel="noopener noreferrer"
-          className="eyebrow bg-forest text-ivory mt-8 inline-block rounded-sm px-8 py-4"
+          className="eyebrow bg-forest-lift text-ivory mt-8 inline-block rounded-sm px-8 py-4"
         >
           Continue on WhatsApp
         </a>
@@ -184,7 +193,7 @@ export function EnquiryForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="eyebrow bg-charcoal text-ivory rounded-sm px-10 py-4 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50"
+          className="eyebrow bg-primary text-primary-foreground rounded-sm px-10 py-4 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50"
         >
           {isSubmitting ? "Sending…" : "Send enquiry"}
         </button>
@@ -197,7 +206,7 @@ export function EnquiryForm({
 }
 
 const inputClass =
-  "w-full border-0 border-b border-border bg-transparent px-0 py-3 text-base outline-none transition-colors duration-200 focus:border-bronze placeholder:text-muted-foreground/60";
+  "w-full border-0 border-b border-border bg-transparent px-0 py-3 text-base outline-none transition-colors duration-200 focus:border-accent placeholder:text-muted-foreground/60";
 
 function Field({
   label,
@@ -216,7 +225,7 @@ function Field({
     <label className="block">
       <span className="eyebrow text-muted-foreground flex items-baseline gap-2">
         {label}
-        {required && <span className="text-bronze">*</span>}
+        {required && <span className="text-accent">*</span>}
         {hint && <span className="normal-case tracking-normal">({hint})</span>}
       </span>
       <div className="mt-2">{children}</div>

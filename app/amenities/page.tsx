@@ -44,7 +44,7 @@ export default async function AmenitiesPage() {
     <>
       <section className="section pt-40">
         <div className="container-page">
-          <p className="eyebrow text-bronze">Lifestyle</p>
+          <p className="eyebrow text-accent">Lifestyle</p>
           <h1 className="measure mt-6 text-h3 md:text-h2">
             Amenities people actually use.
           </h1>
@@ -63,11 +63,11 @@ export default async function AmenitiesPage() {
         return (
           <section
             key={category}
-            className={categoryIndex % 2 === 1 ? "section bg-cream/50" : "section"}
+            className={categoryIndex % 2 === 1 ? "section bg-surface-2" : "section"}
           >
             <div className="container-page">
               <FadeInView>
-                <p className="eyebrow text-bronze">{CATEGORY_LABELS[category]}</p>
+                <p className="eyebrow text-accent">{CATEGORY_LABELS[category]}</p>
               </FadeInView>
 
               <div className="mt-12 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">

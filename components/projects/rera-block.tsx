@@ -20,7 +20,7 @@ export function ReraBlock({ project }: { project: Project }) {
     <div className="border border-border p-8">
       <div className="flex flex-wrap items-start justify-between gap-8">
         <div>
-          <p className="eyebrow text-bronze">Statutory disclosure</p>
+          <p className="eyebrow text-accent">Statutory disclosure</p>
           <p className="mt-4 text-base">
             {siteConfig.rera.authority} Registration No.{" "}
             <span className="font-medium">{project.reraNumber}</span>

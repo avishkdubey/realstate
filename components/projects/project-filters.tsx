@@ -144,7 +144,7 @@ export function ProjectFilters({
         <button
           type="button"
           onClick={() => startTransition(() => router.replace(pathname, { scroll: false }))}
-          className="eyebrow text-bronze border-b border-current pb-1"
+          className="eyebrow text-accent border-b border-current pb-1"
         >
           Clear {activeCount} filter{activeCount > 1 ? "s" : ""}
         </button>
@@ -185,7 +185,7 @@ function FilterChip({
       className={cn(
         "eyebrow rounded-sm border px-4 py-2 transition-colors duration-200",
         active
-          ? "bg-charcoal text-ivory border-charcoal"
+          ? "bg-primary text-primary-foreground border-primary"
           : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
       )}
     >
