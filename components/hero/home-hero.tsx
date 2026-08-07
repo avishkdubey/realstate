@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useRef, useState } from "react";
 
+import { DeferredConstruction } from "@/components/hero/deferred-construction";
 import { ScrollFrameSequence } from "@/components/hero/scroll-frame-sequence";
 import { siteConfig } from "@/lib/site-config";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -9,26 +11,53 @@ import { whatsappLink } from "@/lib/whatsapp";
 /**
  * The home hero.
  *
- * A scroll-scrubbed sequence over the building, with the headline pinned in
- * front of it. The copy and both calls to action are ordinary markup — the
- * sequence sits behind them and can fail completely without taking the hero
- * with it.
+ * Two possible backdrops behind one unchanging foreground. Capable devices get
+ * a tower assembling itself from pile caps to lit windows as you scroll;
+ * everyone else gets the scroll-scrubbed photo sequence that was here before.
+ *
+ * The foreground — eyebrow, H1, lead paragraph, both calls to action — is
+ * ordinary server-rendered markup in both cases and never moves. `CLAUDE.md` §7
+ * is blunt about why: "bots read HTML, not WebGL pixels". It is also what makes
+ * the 3D safe to fail; if the canvas dies the hero is still a hero.
+ *
+ * The frame sequence is not dead weight in the 3D path — it is the poster the
+ * visitor looks at while the Three.js chunk loads, and the thing that comes
+ * back if the GPU drops the context.
  */
 const framePath = (index: number) =>
   `/frames/hero/${String(index).padStart(3, "0")}.webp`;
 
 export function HomeHero() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [sceneActive, setSceneActive] = useState(false);
+
+  // Stable identity: DeferredConstruction has this in an effect dependency
+  // list, and an inline arrow would re-run the capability check every render.
+  const handleActive = useCallback((active: boolean) => setSceneActive(active), []);
+
   return (
     <ScrollFrameSequence
       frameCount={36}
       framePath={framePath}
       poster="/frames/hero/001.webp"
-      className="relative h-[250svh]"
+      className="relative h-[350svh]"
+      sectionRef={sectionRef}
+      // Once the tower is up, the photo sequence behind it is wasted bandwidth
+      // and a muddled image. Fade it out rather than unmounting, so a context
+      // loss can bring it straight back.
+      dimmed={sceneActive}
     >
-      {/* Scrim: the render is bright, the type is light. */}
+      <DeferredConstruction sectionRef={sectionRef} onActive={handleActive} />
+
+      {/* Scrim: the render is bright, the type is light. Lighter over the 3D,
+          which is already dark and does not need holding down. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-b from-charcoal/75 via-charcoal/40 to-charcoal/85"
+        className={
+          sceneActive
+            ? "absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-surface-0"
+            : "absolute inset-0 bg-gradient-to-b from-charcoal/75 via-charcoal/40 to-charcoal/85"
+        }
       />
 
       <div className="relative flex h-full items-end">
