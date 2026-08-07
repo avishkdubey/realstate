@@ -1,0 +1,62 @@
+
+> realstate@0.1.0 lint
+> eslint
+
+
+> realstate@0.1.0 build
+> next build
+
+▲ Next.js 16.3.0 (Turbopack)
+✓ Running next.config.ts took 299ms
+
+  Creating an optimized production build ...
+Error: Can't resolve 'shadcn/tailwind.css' in '/home/cis/windows/realstate/app'
+    [at finishWithoutResolve (/home/cis/windows/realstate/node_modules/enhanced-resolve/lib/Resolver.js:952:18)]
+    [at /home/cis/windows/realstate/node_modules/enhanced-resolve/lib/Resolver.js:1048:13]
+    [at /home/cis/windows/realstate/node_modules/enhanced-resolve/lib/Resolver.js:1132:5]
+    [at eval (eval at create (/home/cis/windows/realstate/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:15:1)]
+    [at /home/cis/windows/realstate/node_modules/enhanced-resolve/lib/Resolver.js:1132:5]
+    [at eval (eval at create (/home/cis/windows/realstate/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:27:1)]
+    [at /home/cis/windows/realstate/node_modules/enhanced-resolve/lib/DescriptionFilePlugin.js:94:43]
+    [at /home/cis/windows/realstate/node_modules/enhanced-resolve/lib/Resolver.js:1132:5]
+    [at eval (eval at create (/home/cis/windows/realstate/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:15:1)]
+    [at /home/cis/windows/realstate/node_modules/enhanced-resolve/lib/Resolver.js:1132:5] {
+  details: "resolve 'shadcn/tailwind.css' in '/home/cis/windows/realstate/app'\n" +
+    '  Parsed request is a module\n' +
+    '  using description file: /home/cis/windows/realstate/package.json (relative path: ./app)\n' +
+    '    resolve as module\n' +
+    "      /home/cis/windows/realstate/app/node_modules doesn't exist or is not a directory\n" +
+    '      looking for modules in /home/cis/windows/realstate/node_modules\n' +
+    "        /home/cis/windows/realstate/node_modules/shadcn doesn't exist\n" +
+    "      /home/cis/windows/node_modules doesn't exist or is not a directory\n" +
+    "      /home/cis/node_modules doesn't exist or is not a directory\n" +
+    "      /home/node_modules doesn't exist or is not a directory\n" +
+    "      /node_modules doesn't exist or is not a directory"
+}
+✓ Compiled successfully in 18.7s
+  Finished TypeScript in 16.3s    ✓ Finished TypeScript in 16.3s 
+Error: Cannot find module '../../../../chunks/[turbopack]_runtime.js'
+Require stack:
+- /home/cis/windows/realstate/.next/server/app/projects/[slug]/opengraph-image/route.js
+- /home/cis/windows/realstate/node_modules/next/dist/server/require.js
+- /home/cis/windows/realstate/node_modules/next/dist/server/load-components.js
+- /home/cis/windows/realstate/node_modules/next/dist/build/utils.js
+- /home/cis/windows/realstate/node_modules/next/dist/build/worker.js
+- /home/cis/windows/realstate/node_modules/next/dist/compiled/jest-worker/processChild.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/cis/windows/realstate/.next/server/app/projects/[slug]/opengraph-image/route.js',
+    '/home/cis/windows/realstate/node_modules/next/dist/server/require.js',
+    '/home/cis/windows/realstate/node_modules/next/dist/server/load-components.js',
+    '/home/cis/windows/realstate/node_modules/next/dist/build/utils.js',
+    '/home/cis/windows/realstate/node_modules/next/dist/build/worker.js',
+    '/home/cis/windows/realstate/node_modules/next/dist/compiled/jest-worker/processChild.js'
+  ]
+}
+
+> Build error occurred
+Error: Failed to collect page data for /projects/[slug]/opengraph-image
+    at ignore-listed frames {
+  type: 'Error'
+}

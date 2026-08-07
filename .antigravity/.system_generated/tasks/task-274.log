@@ -1,0 +1,87 @@
+
+> realstate@0.1.0 lint
+> eslint
+
+
+/home/cis/windows/realstate/components/projects/apartment-interior-scene.tsx
+   5:19  warning  'Environment' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  38:10  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/home/cis/windows/realstate/components/projects/apartment-interior-scene.tsx:38:10
+  36 |   const wallMesh = useRef<THREE.InstancedMesh>(null);
+  37 |   useMemo(() => {
+> 38 |     if (!wallMesh.current) return;
+     |          ^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  39 |     walls.forEach((wall, i) => {
+  40 |       // Wall position
+  41 |       const px = wall.x * gridToMeters - offsetX;
+
+To initialize a ref only once, check that the ref is null with the pattern `if (ref.current == null) { ref.current = ... }`                                                                                                                                                                                                                                                react-hooks/refs
+  39:19  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/home/cis/windows/realstate/components/projects/apartment-interior-scene.tsx:39:19
+  37 |   useMemo(() => {
+  38 |     if (!wallMesh.current) return;
+> 39 |     walls.forEach((wall, i) => {
+     |                   ^^^^^^^^^^^^^^
+> 40 |       // Wall position
+     | ^^^^^^^^^^^^^^^^^^^^^^
+> 41 |       const px = wall.x * gridToMeters - offsetX;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^
+> 55 |       wallMesh.current!.setColorAt(i, color);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+> 56 |     });
+     | ^^^^^^ Passing a ref to a function may read its value during render
+  57 |     wallMesh.current.instanceMatrix.needsUpdate = true;
+  58 |     if (wallMesh.current.instanceColor) wallMesh.current.instanceColor.needsUpdate = true;
+  59 |   }, [walls, gridToMeters, offsetX, offsetZ]);  react-hooks/refs
+  57:5   error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/home/cis/windows/realstate/components/projects/apartment-interior-scene.tsx:57:5
+  55 |       wallMesh.current!.setColorAt(i, color);
+  56 |     });
+> 57 |     wallMesh.current.instanceMatrix.needsUpdate = true;
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  58 |     if (wallMesh.current.instanceColor) wallMesh.current.instanceColor.needsUpdate = true;
+  59 |   }, [walls, gridToMeters, offsetX, offsetZ]);
+  60 |                                                                                                                                                                                                                                                                                                                           react-hooks/refs
+  58:9   error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/home/cis/windows/realstate/components/projects/apartment-interior-scene.tsx:58:9
+  56 |     });
+  57 |     wallMesh.current.instanceMatrix.needsUpdate = true;
+> 58 |     if (wallMesh.current.instanceColor) wallMesh.current.instanceColor.needsUpdate = true;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  59 |   }, [walls, gridToMeters, offsetX, offsetZ]);
+  60 |
+  61 |   useFrame(({ camera }) => {                                                                                                                                                                                                                                                                                                                                               react-hooks/refs
+  58:41  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/home/cis/windows/realstate/components/projects/apartment-interior-scene.tsx:58:41
+  56 |     });
+  57 |     wallMesh.current.instanceMatrix.needsUpdate = true;
+> 58 |     if (wallMesh.current.instanceColor) wallMesh.current.instanceColor.needsUpdate = true;
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  59 |   }, [walls, gridToMeters, offsetX, offsetZ]);
+  60 |
+  61 |   useFrame(({ camera }) => {                                                                                                                                                                                                                                                                                                        react-hooks/refs
+
+/home/cis/windows/realstate/components/projects/apartment-interior.tsx
+  6:10  warning  'useScrollProgress' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/cis/windows/realstate/lib/interior-generator.ts
+  1:21  warning  'Room' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 8 problems (5 errors, 3 warnings)
+

@@ -1,0 +1,60 @@
+
+> realstate@0.1.0 lint
+> eslint
+
+
+/home/cis/windows/realstate/components/onboarding/onboarding-gate.tsx
+  17:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/cis/windows/realstate/components/onboarding/onboarding-gate.tsx:17:5
+  15 |
+  16 |   useEffect(() => {
+> 17 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  18 |     if (window.location.search.includes("nogate=1")) {
+  19 |       setNogate(true);
+  20 |     }                                                                                                                                             react-hooks/set-state-in-effect
+  82:35  error  Error: Cannot access variable before it is declared
+
+`closeGate` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/cis/windows/realstate/components/onboarding/onboarding-gate.tsx:82:35
+  80 |     const onEnded = () => {
+  81 |       if (step === "greeting") setStep("ask-name");
+> 82 |       else if (step === "thanks") closeGate();
+     |                                   ^^^^^^^^^ `closeGate` accessed before it is declared
+  83 |     };
+  84 |     
+  85 |     audio.addEventListener("ended", onEnded);
+
+/home/cis/windows/realstate/components/onboarding/onboarding-gate.tsx:107:3
+  105 |   };
+  106 |
+> 107 |   const closeGate = () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 108 |     setStep("closing");
+      | ^^^^^^^^^^^^^^^^^^^^^^^
+> 109 |     setTimeout(() => {
+      | ^^^^^^^^^^^^^^^^^^^^^^^
+> 110 |       rememberSkip();
+      | ^^^^^^^^^^^^^^^^^^^^^^^
+> 111 |     }, 500);
+      | ^^^^^^^^^^^^^^^^^^^^^^^
+> 112 |   };
+      | ^^^^^ `closeGate` is declared here
+  113 |
+  114 |   const handleSubmit = (e: React.FormEvent) => {
+  115 |     e.preventDefault();  react-hooks/immutability
+
+/home/cis/windows/realstate/components/onboarding/use-lip-sync.ts
+  28:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 4 problems (4 errors, 0 warnings)
+

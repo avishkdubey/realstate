@@ -1,0 +1,56 @@
+
+> realstate@0.1.0 build
+> next build
+
+▲ Next.js 16.3.0 (Turbopack)
+✓ Running next.config.ts took 110ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 31.3s
+  Finished TypeScript in 31.7s    ✓ Finished TypeScript in 31.7s 
+  Collecting page data using 3 workers in 3.0s    ✓ Collecting page data using 3 workers in 3.0s 
+✓ Generating static pages using 3 workers (43/43) in 3.2s
+  Finalizing page optimization in 14ms    ✓ Finalizing page optimization in 14ms 
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /about
+├ ○ /amenities
+├ ƒ /api/brochure
+├ ƒ /api/enquiry
+├ ○ /careers
+├ ○ /channel-partners
+├ ○ /contact
+├ ○ /gallery
+├ ○ /insights
+├   /insights/[slug]
+│ ├ ● /insights/ahmedabad-property-market-2026
+│ ├ ● /insights/vastu-facing-guide-ahmedabad
+│ └ ● /insights/home-loan-emi-guide
+├ ○ /llms.txt
+├ ○ /locations
+├   /locations/[slug]
+│ ├ ● /locations/sg-highway
+│ ├ ● /locations/shela
+│ ├ ● /locations/south-bopal
+│ └ ● [+3 more paths]
+├ ○ /nri-corner
+├ ○ /privacy
+├ ƒ /projects
+├   /projects/[slug]
+│ ├ ● /projects/kautilya-two20
+│ ├ ● /projects/kautilya-one54
+│ ├ ● /projects/kautilya-nilay
+│ └ ● [+9 more paths]
+├ ƒ /projects/[slug]/opengraph-image
+├ ○ /rera-disclosure
+├ ○ /robots.txt
+├ ○ /sitemap.xml
+└ ○ /terms
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

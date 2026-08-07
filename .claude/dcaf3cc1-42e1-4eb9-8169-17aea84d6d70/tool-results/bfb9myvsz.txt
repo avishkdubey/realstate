@@ -1,0 +1,888 @@
+=====FILE: components/hero/home-hero.tsx (85 lines)=====
+     1	"use client";
+     2	
+     3	import Link from "next/link";
+     4	
+     5	import { ScrollFrameSequence } from "@/components/hero/scroll-frame-sequence";
+     6	import { siteConfig } from "@/lib/site-config";
+     7	import { whatsappLink } from "@/lib/whatsapp";
+     8	
+     9	/**
+    10	 * The home hero.
+    11	 *
+    12	 * A scroll-scrubbed sequence over the building, with the headline pinned in
+    13	 * front of it. The copy and both calls to action are ordinary markup — the
+    14	 * sequence sits behind them and can fail completely without taking the hero
+    15	 * with it.
+    16	 */
+    17	const framePath = (index: number) =>
+    18	  `/frames/hero/${String(index).padStart(3, "0")}.webp`;
+    19	
+    20	export function HomeHero() {
+    21	  return (
+    22	    <ScrollFrameSequence
+    23	      frameCount={36}
+    24	      framePath={framePath}
+    25	      poster="/frames/hero/001.webp"
+    26	      className="relative h-[250svh]"
+    27	    >
+    28	      {/* Scrim: the render is bright, the type is light. */}
+    29	      <div
+    30	        aria-hidden
+    31	        className="absolute inset-0 bg-gradient-to-b from-charcoal/75 via-charcoal/40 to-charcoal/85"
+    32	      />
+    33	
+    34	      <div className="relative flex h-full items-end">
+    35	        <div className="container-page pb-[12vh]">
+    36	          <p className="eyebrow text-gold-soft animate-[rise_0.9s_var(--ease-entrance)_both]">
+    37	            Ahmedabad · Since {siteConfig.foundedYear}
+    38	          </p>
+    39	
+    40	          <h1 className="text-ivory mt-6 max-w-[16ch] text-h2 leading-[1.02] md:text-h1">
+    41	            <span className="block animate-[rise_1s_var(--ease-entrance)_0.08s_both]">
+    42	              A trusted builder
+    43	            </span>
+    44	            <span className="block animate-[rise_1s_var(--ease-entrance)_0.16s_both]">
+    45	              in Ahmedabad.
+    46	            </span>
+    47	          </h1>
+    48	
+    49	          <p className="measure text-lead text-ivory/70 mt-8 animate-[rise_1s_var(--ease-entrance)_0.28s_both]">
+    50	            {siteConfig.stats.yearsExperience} years, {siteConfig.stats.completedProjects}{" "}
+    51	            completed projects and {siteConfig.stats.happyFamilies.toLocaleString("en-IN")}{" "}
+    52	            families who live in something we built.
+    53	          </p>
+    54	
+    55	          <div className="mt-10 flex flex-wrap gap-4 animate-[rise_1s_var(--ease-entrance)_0.36s_both]">
+    56	            <Link
+    57	              href="/projects"
+    58	              className="eyebrow bg-gold text-charcoal rounded-sm px-8 py-4 transition-transform duration-300 hover:-translate-y-0.5"
+    59	            >
+    60	              View Projects
+    61	            </Link>
+    62	            <a
+    63	              href={whatsappLink()}
+    64	              target="_blank"
+    65	              rel="noopener noreferrer"
+    66	              className="eyebrow text-ivory hover:bg-ivory hover:text-charcoal rounded-sm border border-ivory/30 px-8 py-4 transition-colors duration-300"
+    67	            >
+    68	              WhatsApp Us
+    69	            </a>
+    70	          </div>
+    71	        </div>
+    72	      </div>
+    73	
+    74	      {/* Scroll affordance — the hero is 250vh, so it has to invite the move. */}
+    75	      <div
+    76	        aria-hidden
+    77	        className="text-ivory/50 absolute bottom-8 left-1/2 -translate-x-1/2"
+    78	      >
+    79	        <span className="eyebrow block animate-[nudge_2.4s_ease-in-out_infinite]">
+    80	          Scroll
+    81	        </span>
+    82	      </div>
+    83	    </ScrollFrameSequence>
+    84	  );
+    85	}
+=====FILE: components/hero/hero-canvas.tsx (56 lines)=====
+     1	"use client";
+     2	
+     3	import { useEffect, useState } from "react";
+     4	import dynamic from "next/dynamic";
+     5	
+     6	import { useReducedMotionPreference } from "@/components/providers/reduced-motion-provider";
+     7	import { WebGLBoundary } from "@/components/webgl-boundary";
+     8	import { shouldRenderWebGL } from "@/lib/webgl";
+     9	
+    10	const HeroScene = dynamic(
+    11	  () => import("@/components/hero/hero-scene").then((m) => m.HeroScene),
+    12	  { ssr: false, loading: () => null },
+    13	);
+    14	
+    15	/**
+    16	 * Decides whether this device gets the WebGL hero at all.
+    17	 *
+    18	 * The scene is decoration layered behind real, server-rendered text — it never
+    19	 * carries content and it must never delay the LCP. So it mounts only once the
+    20	 * capability gate in `lib/webgl.ts` passes and the browser has gone idle.
+    21	 * Everyone else keeps the gradient hero, which is what the page renders
+    22	 * anyway (CLAUDE.md §7).
+    23	 */
+    24	export function HeroCanvas() {
+    25	  const reducedMotion = useReducedMotionPreference();
+    26	  const [allowed, setAllowed] = useState(false);
+    27	
+    28	  useEffect(() => {
+    29	    if (!shouldRenderWebGL(reducedMotion)) return;
+    30	
+    31	    // Wait for the main thread to go quiet so the scene never competes with
+    32	    // hydration or the LCP paint.
+    33	    const schedule =
+    34	      window.requestIdleCallback ?? ((cb: IdleRequestCallback) => setTimeout(cb, 1200));
+    35	    const handle = schedule(() => setAllowed(true));
+    36	
+    37	    return () => {
+    38	      if (window.cancelIdleCallback && typeof handle === "number") {
+    39	        window.cancelIdleCallback(handle);
+    40	      }
+    41	    };
+    42	  }, [reducedMotion]);
+    43	
+    44	  if (!allowed) return null;
+    45	
+    46	  return (
+    47	    <WebGLBoundary>
+    48	      <div
+    49	        className="pointer-events-none absolute inset-0 opacity-0 [animation:fade-in-canvas_1.2s_ease-out_forwards]"
+    50	        aria-hidden
+    51	      >
+    52	        <HeroScene />
+    53	      </div>
+    54	    </WebGLBoundary>
+    55	  );
+    56	}
+=====FILE: components/hero/hero-scene.tsx (120 lines)=====
+     1	"use client";
+     2	
+     3	import { useMemo, useRef } from "react";
+     4	import { Canvas, useFrame, type ThreeElements } from "@react-three/fiber";
+     5	import { Environment } from "@react-three/drei";
+     6	import * as THREE from "three";
+     7	
+     8	/**
+     9	 * The hero scene.
+    10	 *
+    11	 * Atmosphere, not spectacle. A slow parallax over an abstract massing of
+    12	 * towers, lit like an architectural model — the point is that the page feels
+    13	 * expensive, not that anyone examines the geometry (CLAUDE.md §7).
+    14	 *
+    15	 * Budget discipline: well under 100k triangles and 30 draw calls, DPR capped
+    16	 * at 1.5, no allocation inside the frame loop, and the whole canvas is mounted
+    17	 * only by a wrapper that has already decided the device can afford it.
+    18	 */
+    19	
+    20	/** Deterministic massing, so server and client agree and builds are stable. */
+    21	const BLOCKS = [
+    22	  { x: -3.2, z: -1.4, w: 0.9, h: 3.4, d: 0.9 },
+    23	  { x: -2.0, z: 0.6, w: 1.1, h: 2.2, d: 1.0 },
+    24	  { x: -0.6, z: -0.8, w: 1.0, h: 4.6, d: 1.0 },
+    25	  { x: 0.8, z: 0.9, w: 1.2, h: 2.9, d: 1.1 },
+    26	  { x: 2.2, z: -1.1, w: 0.9, h: 3.9, d: 0.9 },
+    27	  { x: 3.5, z: 0.4, w: 1.0, h: 2.4, d: 1.0 },
+    28	];
+    29	
+    30	export function HeroScene() {
+    31	  return (
+    32	    <Canvas
+    33	      // Capping DPR is the single most effective mobile GPU saving available.
+    34	      dpr={[1, 1.5]}
+    35	      gl={{ antialias: true, powerPreference: "high-performance" }}
+    36	      camera={{ position: [0, 3.4, 9], fov: 38 }}
+    37	      // Nothing animates on its own except our drift, so frameloop stays on
+    38	      // demand-free but the renderer still parks when the tab is hidden.
+    39	      onCreated={({ gl }) => {
+    40	        gl.toneMapping = THREE.ACESFilmicToneMapping;
+    41	        gl.toneMappingExposure = 1.05;
+    42	      }}
+    43	    >
+    44	      <color attach="background" args={["#141414"]} />
+    45	      <fog attach="fog" args={["#141414", 9, 20]} />
+    46	
+    47	      {/* Architectural studio lighting: soft ambient, one keyed directional. */}
+    48	      <ambientLight intensity={0.45} />
+    49	      <directionalLight
+    50	        position={[4, 8, 5]}
+    51	        intensity={1.6}
+    52	        color="#f5f1e8"
+    53	        castShadow={false}
+    54	      />
+    55	      <directionalLight position={[-6, 3, -4]} intensity={0.4} color="#b99c6b" />
+    56	
+    57	      <Environment preset="dawn" />
+    58	
+    59	      <Massing />
+    60	      <Ground />
+    61	    </Canvas>
+    62	  );
+    63	}
+    64	
+    65	function Massing() {
+    66	  const group = useRef<THREE.Group>(null);
+    67	
+    68	  // Materials are created once and shared across every block, which keeps the
+    69	  // draw-call count down and avoids per-frame allocation.
+    70	  const material = useMemo(
+    71	    () =>
+    72	      new THREE.MeshStandardMaterial({
+    73	        color: "#2a2622",
+    74	        roughness: 0.35,
+    75	        metalness: 0.6,
+    76	      }),
+    77	    [],
+    78	  );
+    79	
+    80	  const accent = useMemo(
+    81	    () =>
+    82	      new THREE.MeshStandardMaterial({
+    83	        color: "#b99c6b",
+    84	        roughness: 0.25,
+    85	        metalness: 0.85,
+    86	      }),
+    87	    [],
+    88	  );
+    89	
+    90	  useFrame((state) => {
+    91	    if (!group.current) return;
+    92	    // A very slow drift keyed to the pointer. No new objects per frame.
+    93	    const t = state.clock.elapsedTime;
+    94	    group.current.rotation.y = Math.sin(t * 0.08) * 0.12 + state.pointer.x * 0.08;
+    95	    group.current.position.y = Math.sin(t * 0.25) * 0.04;
+    96	  });
+    97	
+    98	  return (
+    99	    <group ref={group}>
+   100	      {BLOCKS.map((block, index) => (
+   101	        <mesh
+   102	          key={index}
+   103	          position={[block.x, block.h / 2, block.z]}
+   104	          material={index === 2 ? accent : material}
+   105	        >
+   106	          <boxGeometry args={[block.w, block.h, block.d]} />
+   107	        </mesh>
+   108	      ))}
+   109	    </group>
+   110	  );
+   111	}
+   112	
+   113	function Ground(props: ThreeElements["mesh"]) {
+   114	  return (
+   115	    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} {...props}>
+   116	      <planeGeometry args={[60, 60]} />
+   117	      <meshStandardMaterial color="#1a1a1a" roughness={0.9} metalness={0.1} />
+   118	    </mesh>
+   119	  );
+   120	}
+=====FILE: components/hero/scroll-frame-sequence.tsx (207 lines)=====
+     1	"use client";
+     2	
+     3	import { useEffect, useRef, useState } from "react";
+     4	
+     5	import { useReducedMotionPreference } from "@/components/providers/reduced-motion-provider";
+     6	
+     7	type Frame = ImageBitmap | HTMLImageElement;
+     8	
+     9	/**
+    10	 * Scroll-driven image sequence — the technique Apple uses for product pages.
+    11	 *
+    12	 * A video is decoded to numbered stills ahead of time (see
+    13	 * `scripts/extract-frames.md`), and scroll position selects which still is
+    14	 * painted to a canvas. Scrubbing a sequence this way is far more responsive
+    15	 * than seeking a `<video>`, which forces a decode per seek and stutters badly
+    16	 * on mobile.
+    17	 *
+    18	 * Design notes:
+    19	 *  - frames live in state, not a ref, and the render loop is a single effect
+    20	 *    that depends on them. An earlier version split loading and painting
+    21	 *    across two effects communicating through refs, and the loop could end up
+    22	 *    reading a cache the other effect had already replaced — which froze the
+    23	 *    sequence on one frame with no error anywhere.
+    24	 *  - scroll position is sampled inside rAF rather than in a scroll listener,
+    25	 *    so it stays in step with Lenis (which drives scrolling from its own loop)
+    26	 *    and a fast flick never queues hundreds of draws.
+    27	 *  - frame 1 renders immediately as a plain `<img>`, so the hero is never
+    28	 *    empty while the rest decode.
+    29	 *  - reduced motion, Data Saver and 2G keep that still and skip the sequence.
+    30	 */
+    31	export function ScrollFrameSequence({
+    32	  frameCount,
+    33	  framePath,
+    34	  poster,
+    35	  className,
+    36	  children,
+    37	}: {
+    38	  frameCount: number;
+    39	  /** Given a 1-based index, returns that frame's URL. */
+    40	  framePath: (index: number) => string;
+    41	  /** Rendered immediately and whenever the sequence is skipped. */
+    42	  poster: string;
+    43	  className?: string;
+    44	  children?: React.ReactNode;
+    45	}) {
+    46	  const section = useRef<HTMLDivElement>(null);
+    47	  const canvas = useRef<HTMLCanvasElement>(null);
+    48	
+    49	  const reducedMotion = useReducedMotionPreference();
+    50	  const [frames, setFrames] = useState<Frame[]>([]);
+    51	  /**
+    52	   * The canvas only fades in once something has actually been drawn on it.
+    53	   * Revealing it as soon as the frames decoded showed a black rectangle over
+    54	   * the poster on any tab where rAF had not run yet — a backgrounded tab, for
+    55	   * instance, where rAF is paused entirely.
+    56	   */
+    57	  const [hasPainted, setHasPainted] = useState(false);
+    58	
+    59	  /* ---------------------------------------------------------------- load */
+    60	  useEffect(() => {
+    61	    if (reducedMotion) return;
+    62	
+    63	    // A frame sequence is decoration; decoration should never cost someone
+    64	    // their data allowance.
+    65	    const connection = (
+    66	      navigator as { connection?: { saveData?: boolean; effectiveType?: string } }
+    67	    ).connection;
+    68	    if (connection?.saveData) return;
+    69	    if (connection?.effectiveType && /(^|-)2g/.test(connection.effectiveType)) return;
+    70	
+    71	    let cancelled = false;
+    72	
+    73	    const load = async () => {
+    74	      const settled = await Promise.all(
+    75	        Array.from({ length: frameCount }, (_, i) =>
+    76	          loadFrame(framePath(i + 1)).catch(() => null),
+    77	        ),
+    78	      );
+    79	      if (cancelled) return;
+    80	
+    81	      const usable = settled.filter((frame): frame is Frame => frame !== null);
+    82	      if (usable.length > 0) setFrames(usable);
+    83	    };
+    84	
+    85	    // Decode after first paint so the sequence never competes with the LCP.
+    86	    const schedule =
+    87	      window.requestIdleCallback ?? ((cb: IdleRequestCallback) => setTimeout(cb, 600));
+    88	    const handle = schedule(() => void load());
+    89	
+    90	    return () => {
+    91	      cancelled = true;
+    92	      if (window.cancelIdleCallback && typeof handle === "number") {
+    93	        window.cancelIdleCallback(handle);
+    94	      }
+    95	    };
+    96	  }, [frameCount, framePath, reducedMotion]);
+    97	
+    98	  /* --------------------------------------------------------------- paint */
+    99	  useEffect(() => {
+   100	    if (reducedMotion || frames.length === 0) return;
+   101	
+   102	    const node = section.current;
+   103	    const surface = canvas.current;
+   104	    if (!node || !surface) return;
+   105	
+   106	    const context = surface.getContext("2d", { alpha: false });
+   107	    if (!context) return;
+   108	
+   109	    let painted = -1;
+   110	    let raf = 0;
+   111	
+   112	    const draw = (frame: Frame) => {
+   113	      // Cover-fit, so the sequence behaves like a background image.
+   114	      const { width: cw, height: ch } = surface;
+   115	      const scale = Math.max(cw / frame.width, ch / frame.height);
+   116	      const dw = frame.width * scale;
+   117	      const dh = frame.height * scale;
+   118	      context.drawImage(frame, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+   119	    };
+   120	
+   121	    /** Reads scroll position and paints the matching frame. Returns if unchanged. */
+   122	    const render = () => {
+   123	      const rect = node.getBoundingClientRect();
+   124	      const travel = rect.height - window.innerHeight;
+   125	      if (travel <= 0) return;
+   126	
+   127	      const progress = Math.min(1, Math.max(0, -rect.top / travel));
+   128	      const index = Math.min(
+   129	        frames.length - 1,
+   130	        Math.round(progress * (frames.length - 1)),
+   131	      );
+   132	      if (index === painted) return;
+   133	
+   134	      draw(frames[index]);
+   135	      painted = index;
+   136	      // Exposed so the sequence can be asserted on from outside.
+   137	      surface.dataset.frame = String(index);
+   138	      setHasPainted(true);
+   139	    };
+   140	
+   141	    const tick = () => {
+   142	      raf = requestAnimationFrame(tick);
+   143	      render();
+   144	    };
+   145	
+   146	    const resize = () => {
+   147	      const dpr = Math.min(window.devicePixelRatio, 1.5);
+   148	      surface.width = Math.round(surface.clientWidth * dpr);
+   149	      surface.height = Math.round(surface.clientHeight * dpr);
+   150	      painted = -1; // resizing a canvas clears it
+   151	      render();
+   152	    };
+   153	
+   154	    // Paint once synchronously, so the canvas is never revealed empty even if
+   155	    // the first animation frame is delayed or the tab is not rendering yet.
+   156	    resize();
+   157	    raf = requestAnimationFrame(tick);
+   158	    window.addEventListener("resize", resize);
+   159	
+   160	    return () => {
+   161	      cancelAnimationFrame(raf);
+   162	      window.removeEventListener("resize", resize);
+   163	    };
+   164	  }, [frames, reducedMotion]);
+   165	
+   166	  const active = hasPainted && !reducedMotion;
+   167	
+   168	  return (
+   169	    <div ref={section} className={className}>
+   170	      <div className="sticky top-0 h-svh w-full overflow-hidden">
+   171	        {/* Always present, so there is never an empty frame. */}
+   172	        {/* eslint-disable-next-line @next/next/no-img-element */}
+   173	        <img
+   174	          src={poster}
+   175	          alt=""
+   176	          aria-hidden
+   177	          fetchPriority="high"
+   178	          className="absolute inset-0 h-full w-full object-cover"
+   179	        />
+   180	        <canvas
+   181	          ref={canvas}
+   182	          aria-hidden
+   183	          className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
+   184	            active ? "opacity-100" : "opacity-0"
+   185	          }`}
+   186	        />
+   187	        {children}
+   188	      </div>
+   189	    </div>
+   190	  );
+   191	}
+   192	
+   193	/** Prefers ImageBitmap — decoding off the main thread keeps scrolling smooth. */
+   194	async function loadFrame(url: string): Promise<Frame> {
+   195	  if (typeof createImageBitmap === "function") {
+   196	    const response = await fetch(url);
+   197	    if (!response.ok) throw new Error(`frame ${url} failed`);
+   198	    return createImageBitmap(await response.blob());
+   199	  }
+   200	
+   201	  return new Promise((resolve, reject) => {
+   202	    const image = new Image();
+   203	    image.onload = () => resolve(image);
+   204	    image.onerror = reject;
+   205	    image.src = url;
+   206	  });
+   207	}
+=====FILE: components/projects/master-plan.tsx (81 lines)=====
+     1	"use client";
+     2	
+     3	import { useEffect, useRef, useState } from "react";
+     4	import dynamic from "next/dynamic";
+     5	
+     6	import { useReducedMotionPreference } from "@/components/providers/reduced-motion-provider";
+     7	import { WebGLBoundary } from "@/components/webgl-boundary";
+     8	import type { Tower } from "@/lib/types";
+     9	import { shouldRenderWebGL } from "@/lib/webgl";
+    10	
+    11	const MasterPlan3D = dynamic(
+    12	  () => import("@/components/projects/master-plan-3d").then((m) => m.MasterPlan3D),
+    13	  { ssr: false, loading: () => <PlanSkeleton /> },
+    14	);
+    15	
+    16	/**
+    17	 * Gates the 3D master plan behind the same capability check as the hero.
+    18	 *
+    19	 * On mobile, low-power devices, browsers without a working WebGL context, and
+    20	 * for anyone who has asked for reduced motion, this renders nothing at all —
+    21	 * the availability table underneath is the real interface and always has been.
+    22	 */
+    23	export function MasterPlan({ towers }: { towers: Tower[] }) {
+    24	  const reducedMotion = useReducedMotionPreference();
+    25	  const wrapper = useRef<HTMLDivElement>(null);
+    26	  const [allowed, setAllowed] = useState(false);
+    27	
+    28	  useEffect(() => {
+    29	    if (!shouldRenderWebGL(reducedMotion)) return;
+    30	
+    31	    // Two gates, not one. Idle keeps the decision off the hydration critical
+    32	    // path; the intersection check keeps the Three.js chunk from downloading
+    33	    // until the visitor is actually approaching the massing model.
+    34	    const node = wrapper.current;
+    35	    if (!node) return;
+    36	
+    37	    let idleHandle: number | undefined;
+    38	    const observer = new IntersectionObserver(
+    39	      ([entry]) => {
+    40	        if (!entry.isIntersecting) return;
+    41	        observer.disconnect();
+    42	        const schedule =
+    43	          window.requestIdleCallback ??
+    44	          ((cb: IdleRequestCallback) => setTimeout(cb, 200));
+    45	        idleHandle = schedule(() => setAllowed(true)) as number;
+    46	      },
+    47	      { rootMargin: "300px" },
+    48	    );
+    49	    observer.observe(node);
+    50	
+    51	    return () => {
+    52	      observer.disconnect();
+    53	      if (window.cancelIdleCallback && typeof idleHandle === "number") {
+    54	        window.cancelIdleCallback(idleHandle);
+    55	      }
+    56	    };
+    57	  }, [reducedMotion]);
+    58	
+    59	  if (towers.length === 0) return null;
+    60	
+    61	  return (
+    62	    <div ref={wrapper}>
+    63	      {allowed && (
+    64	        <WebGLBoundary>
+    65	          <div className="mb-16">
+    66	            <MasterPlan3D towers={towers} />
+    67	          </div>
+    68	        </WebGLBoundary>
+    69	      )}
+    70	    </div>
+    71	  );
+    72	}
+    73	
+    74	function PlanSkeleton() {
+    75	  return (
+    76	    <div
+    77	      className="bg-card mb-16 aspect-[4/3] w-full animate-pulse border border-border lg:aspect-[16/9]"
+    78	      aria-hidden
+    79	    />
+    80	  );
+    81	}
+=====FILE: components/projects/master-plan-3d.tsx (217 lines)=====
+     1	"use client";
+     2	
+     3	import { useMemo, useRef, useState } from "react";
+     4	import { Canvas, useFrame } from "@react-three/fiber";
+     5	import { OrbitControls } from "@react-three/drei";
+     6	import * as THREE from "three";
+     7	
+     8	import { formatPrice } from "@/lib/format";
+     9	import type { Tower } from "@/lib/types";
+    10	
+    11	/**
+    12	 * Interactive master plan.
+    13	 *
+    14	 * Towers are clickable; selecting one shows what is actually available in it.
+    15	 * The availability table below this component carries the same numbers and is
+    16	 * the crawlable, keyboard-complete version — this is an alternative view of
+    17	 * that data, never the only one (CLAUDE.md §7, §11).
+    18	 */
+    19	export function MasterPlan3D({ towers }: { towers: Tower[] }) {
+    20	  const [selected, setSelected] = useState(towers[0]?.id ?? null);
+    21	  const active = towers.find((tower) => tower.id === selected) ?? towers[0];
+    22	
+    23	  const available = active
+    24	    ? active.units.filter((unit) => unit.status === "available")
+    25	    : [];
+    26	
+    27	  return (
+    28	    <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+    29	      <div className="bg-charcoal aspect-[4/3] w-full border border-border">
+    30	        <Canvas
+    31	          dpr={[1, 1.5]}
+    32	          camera={{ position: [7, 6, 9], fov: 40 }}
+    33	          gl={{ antialias: true }}
+    34	        >
+    35	          <color attach="background" args={["#141414"]} />
+    36	          <ambientLight intensity={0.5} />
+    37	          <directionalLight position={[5, 10, 6]} intensity={1.5} color="#f5f1e8" />
+    38	          <directionalLight position={[-6, 4, -5]} intensity={0.35} color="#b99c6b" />
+    39	
+    40	          <Site />
+    41	          {towers.map((tower, index) => (
+    42	            <TowerMesh
+    43	              key={tower.id}
+    44	              tower={tower}
+    45	              index={index}
+    46	              count={towers.length}
+    47	              selected={tower.id === selected}
+    48	              onSelect={() => setSelected(tower.id)}
+    49	            />
+    50	          ))}
+    51	
+    52	          <OrbitControls
+    53	            enablePan={false}
+    54	            minPolarAngle={Math.PI / 6}
+    55	            maxPolarAngle={Math.PI / 2.2}
+    56	            minDistance={8}
+    57	            maxDistance={18}
+    58	            enableDamping
+    59	            dampingFactor={0.08}
+    60	          />
+    61	        </Canvas>
+    62	      </div>
+    63	
+    64	      <div>
+    65	        {/* Keyboard-operable tower selection — OrbitControls alone is not
+    66	            accessible, so the same choice exists as buttons. */}
+    67	        <div className="flex flex-wrap gap-2">
+    68	          {towers.map((tower) => (
+    69	            <button
+    70	              key={tower.id}
+    71	              type="button"
+    72	              onClick={() => setSelected(tower.id)}
+    73	              aria-pressed={tower.id === selected}
+    74	              className={
+    75	                tower.id === selected
+    76	                  ? "eyebrow bg-charcoal text-ivory border-charcoal rounded-sm border px-4 py-2"
+    77	                  : "eyebrow border-border text-muted-foreground hover:border-foreground rounded-sm border px-4 py-2 transition-colors"
+    78	              }
+    79	            >
+    80	              {tower.name}
+    81	            </button>
+    82	          ))}
+    83	        </div>
+    84	
+    85	        {active && (
+    86	          <div className="mt-8">
+    87	            <h3 className="text-h5">{active.name}</h3>
+    88	            <p className="text-small text-muted-foreground mt-2">
+    89	              {active.floors} floors · {available.length} of {active.units.length}{" "}
+    90	              available
+    91	            </p>
+    92	
+    93	            {available.length > 0 && (
+    94	              <dl className="mt-6 space-y-4">
+    95	                <div className="border-t border-border pt-4">
+    96	                  <dt className="eyebrow text-muted-foreground">
+    97	                    Configurations available
+    98	                  </dt>
+    99	                  <dd className="mt-2">
+   100	                    {[...new Set(available.map((unit) => unit.bhk))].join(" · ")}
+   101	                  </dd>
+   102	                </div>
+   103	                <div className="border-t border-border pt-4">
+   104	                  <dt className="eyebrow text-muted-foreground">From</dt>
+   105	                  <dd className="mt-2">
+   106	                    {available[0].price
+   107	                      ? formatPrice(
+   108	                          Math.min(
+   109	                            ...available
+   110	                              .map((u) => u.price)
+   111	                              .filter((p): p is number => Boolean(p)),
+   112	                          ),
+   113	                        )
+   114	                      : "On request"}
+   115	                  </dd>
+   116	                </div>
+   117	              </dl>
+   118	            )}
+   119	          </div>
+   120	        )}
+   121	
+   122	        <p className="text-caption text-muted-foreground mt-8 leading-relaxed">
+   123	          Massing model — artist&apos;s impression, not to scale. Drag to orbit.
+   124	          The table below carries the same availability in full.
+   125	        </p>
+   126	      </div>
+   127	    </div>
+   128	  );
+   129	}
+   130	
+   131	function TowerMesh({
+   132	  tower,
+   133	  index,
+   134	  count,
+   135	  selected,
+   136	  onSelect,
+   137	}: {
+   138	  tower: Tower;
+   139	  index: number;
+   140	  count: number;
+   141	  selected: boolean;
+   142	  onSelect: () => void;
+   143	}) {
+   144	  const mesh = useRef<THREE.Mesh>(null);
+   145	  const [hovered, setHovered] = useState(false);
+   146	
+   147	  // Height tracks the real floor count so the model is at least directionally
+   148	  // honest about which tower is taller.
+   149	  const height = Math.max(2, tower.floors * 0.28);
+   150	  const spread = 3.2;
+   151	  const x = (index - (count - 1) / 2) * spread;
+   152	
+   153	  // Each tower owns its material so hover state cannot leak between them.
+   154	  const material = useMemo(
+   155	    () =>
+   156	      new THREE.MeshStandardMaterial({
+   157	        color: "#2a2622",
+   158	        roughness: 0.35,
+   159	        metalness: 0.55,
+   160	      }),
+   161	    [],
+   162	  );
+   163	
+   164	  // Target colours are built once. Allocating a THREE.Color inside the frame
+   165	  // loop is the classic way to turn a smooth scene into a stuttering one —
+   166	  // it hands the garbage collector work sixty times a second (CLAUDE.md §7).
+   167	  const palette = useMemo(
+   168	    () => ({
+   169	      idle: new THREE.Color("#2a2622"),
+   170	      hover: new THREE.Color("#8c6a3f"),
+   171	      selected: new THREE.Color("#b99c6b"),
+   172	    }),
+   173	    [],
+   174	  );
+   175	
+   176	  useFrame(() => {
+   177	    if (!mesh.current) return;
+   178	    const target = selected
+   179	      ? palette.selected
+   180	      : hovered
+   181	        ? palette.hover
+   182	        : palette.idle;
+   183	    (mesh.current.material as THREE.MeshStandardMaterial).color.lerp(target, 0.12);
+   184	  });
+   185	
+   186	  return (
+   187	    <mesh
+   188	      ref={mesh}
+   189	      position={[x, height / 2, 0]}
+   190	      material={material}
+   191	      onClick={(event) => {
+   192	        event.stopPropagation();
+   193	        onSelect();
+   194	      }}
+   195	      onPointerOver={(event) => {
+   196	        event.stopPropagation();
+   197	        setHovered(true);
+   198	        document.body.style.cursor = "pointer";
+   199	      }}
+   200	      onPointerOut={() => {
+   201	        setHovered(false);
+   202	        document.body.style.cursor = "";
+   203	      }}
+   204	    >
+   205	      <boxGeometry args={[1.6, height, 1.6]} />
+   206	    </mesh>
+   207	  );
+   208	}
+   209	
+   210	function Site() {
+   211	  return (
+   212	    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+   213	      <planeGeometry args={[40, 40]} />
+   214	      <meshStandardMaterial color="#1a1a1a" roughness={0.95} />
+   215	    </mesh>
+   216	  );
+   217	}
+=====FILE: components/projects/pannellum-tour.tsx (115 lines)=====
+     1	"use client";
+     2	
+     3	import { useEffect, useRef, useState } from "react";
+     4	
+     5	type PannellumViewer = { destroy: () => void };
+     6	type PannellumApi = {
+     7	  viewer: (
+     8	    container: HTMLElement | string,
+     9	    config: Record<string, unknown>,
+    10	  ) => PannellumViewer;
+    11	};
+    12	
+    13	/**
+    14	 * 360° panorama, rendered with Pannellum.
+    15	 *
+    16	 * Matters most to buyers who decide without ever standing in the building,
+    17	 * which describes a large share of NRI purchases (CLAUDE.md §2, §5).
+    18	 *
+    19	 * Pannellum is a UMD bundle that attaches to `window` and needs a DOM, so it
+    20	 * is imported inside an effect rather than at module scope — and only once the
+    21	 * viewer is near the viewport, so neither the script nor the panorama image
+    22	 * costs anything on pages the visitor never scrolls.
+    23	 */
+    24	export function PannellumTour({
+    25	  src,
+    26	  label,
+    27	}: {
+    28	  /** Equirectangular (2:1) panorama image. */
+    29	  src: string;
+    30	  label: string;
+    31	}) {
+    32	  const container = useRef<HTMLDivElement>(null);
+    33	  const [near, setNear] = useState(false);
+    34	  const [failed, setFailed] = useState(false);
+    35	
+    36	  useEffect(() => {
+    37	    const node = container.current;
+    38	    if (!node) return;
+    39	
+    40	    const observer = new IntersectionObserver(
+    41	      ([entry]) => {
+    42	        if (entry.isIntersecting) {
+    43	          setNear(true);
+    44	          observer.disconnect();
+    45	        }
+    46	      },
+    47	      { rootMargin: "200px" },
+    48	    );
+    49	
+    50	    observer.observe(node);
+    51	    return () => observer.disconnect();
+    52	  }, []);
+    53	
+    54	  useEffect(() => {
+    55	    if (!near || !container.current) return;
+    56	
+    57	    const node = container.current;
+    58	    let viewer: PannellumViewer | undefined;
+    59	    let disposed = false;
+    60	
+    61	    (async () => {
+    62	      try {
+    63	        await import("pannellum/build/pannellum.css");
+    64	        await import("pannellum/build/pannellum.js");
+    65	        if (disposed) return;
+    66	
+    67	        const pannellum = (window as unknown as { pannellum?: PannellumApi })
+    68	          .pannellum;
+    69	        if (!pannellum) throw new Error("pannellum failed to attach to window");
+    70	
+    71	        viewer = pannellum.viewer(node, {
+    72	          type: "equirectangular",
+    73	          panorama: src,
+    74	          autoLoad: true,
+    75	          // A slow drift reads as live without hijacking the visitor's scroll.
+    76	          autoRotate: -2,
+    77	          autoRotateInactivityDelay: 3000,
+    78	          showZoomCtrl: true,
+    79	          showFullscreenCtrl: true,
+    80	          keyboardZoom: true,
+    81	          mouseZoom: "fullscreenonly",
+    82	          backgroundColor: [0.08, 0.08, 0.08],
+    83	        });
+    84	      } catch (error) {
+    85	        console.warn("[pannellum] failed to initialise", error);
+    86	        setFailed(true);
+    87	      }
+    88	    })();
+    89	
+    90	    return () => {
+    91	      disposed = true;
+    92	      try {
+    93	        viewer?.destroy();
+    94	      } catch {
+    95	        // Pannellum throws if it never finished initialising; nothing to clean.
+    96	      }
+    97	    };
+    98	  }, [near, src]);
+    99	
+   100	  return (
+   101	    <figure className="m-0">
+   102	      <div
+   103	        ref={container}
+   104	        className="bg-charcoal aspect-[2/1] w-full overflow-hidden border border-border"
+   105	        role="img"
+   106	        aria-label={`360-degree view: ${label}`}
+   107	      />
+   108	      <figcaption className="text-caption text-muted-foreground mt-3">
+   109	        {failed
+   110	          ? "The 360° view could not load on this device."
+   111	          : "Drag to look around. Artist's impression — representational only."}
+   112	      </figcaption>
+   113	    </figure>
+   114	  );
+   115	}
