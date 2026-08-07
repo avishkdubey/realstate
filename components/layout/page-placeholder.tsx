@@ -22,7 +22,7 @@ export function PagePlaceholder({
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">{eyebrow}</p>
+        <p className="eyebrow text-accent">{eyebrow}</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">{title}</h1>
         <p className="measure text-muted-foreground mt-6">{description}</p>
         <p className="eyebrow text-muted-foreground mt-10">

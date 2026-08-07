@@ -101,7 +101,7 @@ export function PannellumTour({
     <figure className="m-0">
       <div
         ref={container}
-        className="bg-charcoal aspect-[2/1] w-full overflow-hidden border border-border"
+        className="bg-surface-1 aspect-[2/1] w-full overflow-hidden border border-border"
         role="img"
         aria-label={`360-degree view: ${label}`}
       />

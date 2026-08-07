@@ -11,7 +11,7 @@ export function SiteFooter() {
   const { address, rera } = siteConfig;
 
   return (
-    <footer className="bg-charcoal text-ivory mt-auto">
+    <footer className="bg-surface-1 border-t border-hairline-strong mt-auto">
       <div className="container-page py-20 md:py-24">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -50,7 +50,7 @@ export function SiteFooter() {
         {/* Statutory block — RERA Act §11(2) requires the authority URL and the
             registration number to appear prominently, at a size no smaller
             than the contact number (GujRERA Order No. 108). */}
-        <div className="mt-16 border-t border-white/10 pt-8">
+        <div className="mt-16 border-t border-hairline pt-8">
           <p className="text-small">
             {rera.authority} Registration:{" "}
             <span className="text-gold-soft">{rera.promoterNumber}</span> ·{" "}

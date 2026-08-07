@@ -16,7 +16,7 @@ export default async function GalleryPage() {
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Imagery</p>
+        <p className="eyebrow text-accent">Imagery</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">Gallery</h1>
         <p className="measure text-muted-foreground mt-6">
           Elevations, interiors, amenities and site progress, filterable by

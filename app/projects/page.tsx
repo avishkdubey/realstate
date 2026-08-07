@@ -30,7 +30,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/project
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Portfolio</p>
+        <p className="eyebrow text-accent">Portfolio</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">Projects</h1>
         <p className="measure text-muted-foreground mt-6">
           Every project below shows its configurations, carpet-area range and

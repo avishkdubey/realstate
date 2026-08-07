@@ -68,7 +68,7 @@ export default async function LocationPage({
             <span className="text-foreground">{location.name}</span>
           </nav>
 
-          <p className="eyebrow text-bronze mt-10">{location.phase}</p>
+          <p className="eyebrow text-accent mt-10">{location.phase}</p>
           <h1 className="measure mt-6 text-h3 md:text-h2">{location.name}</h1>
           <p className="measure text-lead text-muted-foreground mt-6">
             {location.tagline}
@@ -114,10 +114,10 @@ export default async function LocationPage({
       </section>
 
       {/* Drive times */}
-      <section className="section bg-cream/50">
+      <section className="section bg-surface-2">
         <div className="container-page grid gap-16 lg:grid-cols-2">
           <FadeInView>
-            <p className="eyebrow text-bronze">Getting around</p>
+            <p className="eyebrow text-accent">Getting around</p>
             <ul className="mt-8 divide-y divide-border">
               {location.driveTimes.map((entry) => (
                 <li
@@ -137,7 +137,7 @@ export default async function LocationPage({
           </FadeInView>
 
           <FadeInView delay={0.05}>
-            <p className="eyebrow text-bronze">Nearby</p>
+            <p className="eyebrow text-accent">Nearby</p>
             <ul className="mt-8 divide-y divide-border">
               {location.landmarks.map((landmark) => (
                 <li
@@ -164,7 +164,7 @@ export default async function LocationPage({
       <section className="section">
         <div className="container-page grid gap-16 lg:grid-cols-[1fr_1.2fr]">
           <FadeInView>
-            <p className="eyebrow text-bronze">What is changing</p>
+            <p className="eyebrow text-accent">What is changing</p>
           </FadeInView>
           <FadeInView delay={0.05}>
             <ul className="space-y-6">
@@ -185,9 +185,9 @@ export default async function LocationPage({
 
       {/* Projects here */}
       {projects.length > 0 && (
-        <section className="section bg-cream/50">
+        <section className="section bg-surface-2">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Our projects in {location.name}</p>
+            <p className="eyebrow text-accent">Our projects in {location.name}</p>
             <div className="mt-12 grid gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
               {projects.map((project, index) => (
                 <ProjectCard
@@ -206,7 +206,7 @@ export default async function LocationPage({
       {location.faqs.length > 0 && (
         <section className="section">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Questions about {location.name}</p>
+            <p className="eyebrow text-accent">Questions about {location.name}</p>
             <dl className="mt-12 max-w-3xl">
               {location.faqs.map((faq) => (
                 <div key={faq.q} className="border-t border-border py-8">

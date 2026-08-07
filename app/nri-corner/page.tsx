@@ -30,7 +30,7 @@ export default async function NriCornerPage() {
     <>
       <JsonLd data={faqSchema(faqs)} />
 
-      <section className="bg-charcoal text-ivory pt-40">
+      <section className="bg-surface-2 pt-40">
         <div className="container-page pb-24">
           <p className="eyebrow text-gold-soft">For NRI buyers</p>
           <h1 className="measure mt-8 text-h3 md:text-h2">
@@ -55,7 +55,7 @@ export default async function NriCornerPage() {
             </a>
             <Link
               href="/contact"
-              className="eyebrow hover:bg-ivory hover:text-charcoal rounded-sm border border-white/25 px-8 py-4 transition-colors"
+              className="eyebrow hover:bg-ivory hover:text-charcoal rounded-sm border border-hairline-strong px-8 py-4 transition-colors"
             >
               Request a callback
             </Link>
@@ -68,13 +68,13 @@ export default async function NriCornerPage() {
       <section className="section">
         <div className="container-page grid gap-16 lg:grid-cols-[1fr_1.4fr]">
           <FadeInView>
-            <p className="eyebrow text-bronze">The process</p>
+            <p className="eyebrow text-accent">The process</p>
           </FadeInView>
           <FadeInView delay={0.05}>
             <ol className="divide-y divide-border">
               {steps.map((step, index) => (
                 <li key={step.title} className="grid gap-4 py-8 sm:grid-cols-[60px_1fr]">
-                  <span className="font-display text-h5 text-bronze tabular-nums">
+                  <span className="font-display text-h5 text-accent tabular-nums">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span>
@@ -91,10 +91,10 @@ export default async function NriCornerPage() {
       </section>
 
       {/* Documents */}
-      <section className="section bg-cream/50">
+      <section className="section bg-surface-2">
         <div className="container-page grid gap-16 lg:grid-cols-2">
           <FadeInView>
-            <p className="eyebrow text-bronze">What you will need</p>
+            <p className="eyebrow text-accent">What you will need</p>
             <ul className="mt-8 divide-y divide-border">
               {documents.map((doc) => (
                 <li key={doc} className="py-4">
@@ -105,7 +105,7 @@ export default async function NriCornerPage() {
           </FadeInView>
 
           <FadeInView delay={0.05}>
-            <p className="eyebrow text-bronze">Money, plainly</p>
+            <p className="eyebrow text-accent">Money, plainly</p>
             <dl className="mt-8 divide-y divide-border">
               {moneyNotes.map((note) => (
                 <div key={note.term} className="py-5">
@@ -124,7 +124,7 @@ export default async function NriCornerPage() {
       {nriTestimonials.length > 0 && (
         <section className="section">
           <div className="container-page">
-            <p className="eyebrow text-bronze">From buyers abroad</p>
+            <p className="eyebrow text-accent">From buyers abroad</p>
             <ul className="mt-12 grid gap-10 lg:grid-cols-2">
               {nriTestimonials.map((testimonial) => (
                 <li key={testimonial.id} className="border-t border-border pt-6">
@@ -142,9 +142,9 @@ export default async function NriCornerPage() {
       )}
 
       {/* FAQs */}
-      <section className="section bg-cream/50">
+      <section className="section bg-surface-2">
         <div className="container-page">
-          <p className="eyebrow text-bronze">Questions we get asked</p>
+          <p className="eyebrow text-accent">Questions we get asked</p>
           <dl className="mt-12 max-w-3xl">
             {faqs.map((faq) => (
               <div key={faq.q} className="border-t border-border py-8">

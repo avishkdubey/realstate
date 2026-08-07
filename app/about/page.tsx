@@ -23,7 +23,7 @@ export default async function AboutPage() {
 
   return (
     <>
-      <section className="bg-charcoal text-ivory pt-40">
+      <section className="bg-surface-2 pt-40">
         <div className="container-page pb-24">
           <p className="eyebrow text-gold-soft">
             Ahmedabad · Since {siteConfig.foundedYear}
@@ -44,7 +44,7 @@ export default async function AboutPage() {
       <section className="section">
         <div className="container-page grid gap-16 lg:grid-cols-[1fr_1.4fr]">
           <FadeInView>
-            <p className="eyebrow text-bronze">The timeline</p>
+            <p className="eyebrow text-accent">The timeline</p>
           </FadeInView>
 
           <FadeInView delay={0.05}>
@@ -69,9 +69,9 @@ export default async function AboutPage() {
 
       {/* Delivered */}
       {delivered.length > 0 && (
-        <section className="section bg-cream/50">
+        <section className="section bg-surface-2">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Already standing</p>
+            <p className="eyebrow text-accent">Already standing</p>
             <h2 className="measure mt-6 text-h4">
               The most useful hour you can spend with us is in a building we
               finished.
@@ -91,7 +91,7 @@ export default async function AboutPage() {
                       seed={index + 3}
                       className="aspect-[16/10] w-full"
                     />
-                    <h3 className="mt-5 text-h5 group-hover:text-bronze transition-colors">
+                    <h3 className="mt-5 text-h5 group-hover:text-accent transition-colors">
                       {project.name}
                     </h3>
                     <p className="text-small text-muted-foreground mt-2">
@@ -109,7 +109,7 @@ export default async function AboutPage() {
       <section className="section">
         <div className="container-page grid gap-16 lg:grid-cols-[1fr_1.4fr]">
           <FadeInView>
-            <p className="eyebrow text-bronze">What we hold ourselves to</p>
+            <p className="eyebrow text-accent">What we hold ourselves to</p>
           </FadeInView>
           <FadeInView delay={0.05}>
             <ul className="divide-y divide-border">
@@ -125,10 +125,10 @@ export default async function AboutPage() {
       </section>
 
       {/* Certifications and office */}
-      <section className="section bg-cream/50">
+      <section className="section bg-surface-2">
         <div className="container-page grid gap-16 lg:grid-cols-2">
           <FadeInView>
-            <p className="eyebrow text-bronze">Certifications</p>
+            <p className="eyebrow text-accent">Certifications</p>
             <ul className="mt-8 divide-y divide-border">
               <Certification
                 name="IGBC Gold"
@@ -150,7 +150,7 @@ export default async function AboutPage() {
           </FadeInView>
 
           <FadeInView delay={0.05}>
-            <p className="eyebrow text-bronze">Come and see us</p>
+            <p className="eyebrow text-accent">Come and see us</p>
             <address className="mt-8 not-italic leading-relaxed">
               {siteConfig.address.street}
               <br />

@@ -27,7 +27,7 @@ export function PlaceholderVisual({
   return (
     <div
       className={cn(
-        "bg-charcoal relative isolate flex items-end overflow-hidden",
+        "bg-surface-2 relative isolate flex items-end overflow-hidden",
         className,
       )}
       role="img"

@@ -26,7 +26,7 @@ export function MasterPlan3D({ towers }: { towers: Tower[] }) {
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-start">
-      <div className="bg-charcoal aspect-[4/3] w-full border border-border">
+      <div className="bg-surface-1 aspect-[4/3] w-full border border-border">
         <Canvas
           dpr={[1, 1.5]}
           camera={{ position: [7, 6, 9], fov: 40 }}
@@ -73,7 +73,7 @@ export function MasterPlan3D({ towers }: { towers: Tower[] }) {
               aria-pressed={tower.id === selected}
               className={
                 tower.id === selected
-                  ? "eyebrow bg-charcoal text-ivory border-charcoal rounded-sm border px-4 py-2"
+                  ? "eyebrow bg-primary text-primary-foreground border-primary rounded-sm border px-4 py-2"
                   : "eyebrow border-border text-muted-foreground hover:border-foreground rounded-sm border px-4 py-2 transition-colors"
               }
             >

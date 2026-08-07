@@ -14,7 +14,7 @@ export default function CareersPage() {
   return (
     <section className="section pt-40">
       <div className="container-page">
-        <p className="eyebrow text-bronze">Join us</p>
+        <p className="eyebrow text-accent">Join us</p>
         <h1 className="measure mt-6 text-h3 md:text-h2">Careers</h1>
         <p className="measure text-muted-foreground mt-6">
           We are a small team that builds a few things carefully. That means
@@ -45,7 +45,7 @@ export default function CareersPage() {
 
           <FadeInView delay={0.05}>
             <div className="border border-border p-8">
-              <p className="eyebrow text-bronze">How to apply</p>
+              <p className="eyebrow text-accent">How to apply</p>
               <p className="measure text-muted-foreground mt-4">
                 Send a CV and a short note about something you have built — a
                 building, a spreadsheet, an argument — to our office. We read

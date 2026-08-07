@@ -54,7 +54,7 @@ export function CorridorMap({
     <figure className={cn("m-0", className)}>
       <svg
         viewBox="0 0 100 100"
-        className="bg-cream/60 block h-auto w-full border border-border"
+        className="bg-surface-2 block h-auto w-full border border-border"
         role="img"
         aria-label="Schematic map of west Ahmedabad micro-markets"
       >
@@ -62,7 +62,7 @@ export function CorridorMap({
         <path
           d="M 88,0 Q 74,30 70,52 Q 66,74 74,100"
           fill="none"
-          className="stroke-[var(--forest)]"
+          className="stroke-[var(--forest-lift)]"
           strokeWidth={1.6}
           strokeOpacity={0.18}
         />
@@ -119,7 +119,7 @@ export function CorridorMap({
                 y={position.y + 1}
                 textAnchor={anchor}
                 className={
-                  isActive ? "fill-[var(--charcoal)]" : "fill-[var(--stone)]"
+                  isActive ? "fill-[var(--ivory)]" : "fill-[var(--stone-2)]"
                 }
                 style={{ fontSize: 2.9, fontWeight: isActive ? 600 : 400 }}
               >
@@ -166,7 +166,7 @@ export function CorridorList({
             className="group flex items-baseline justify-between gap-6 py-5"
           >
             <span>
-              <span className="text-lead group-hover:text-bronze transition-colors duration-200">
+              <span className="text-lead group-hover:text-accent transition-colors duration-200">
                 {location.name}
               </span>
               <span className="text-small text-muted-foreground mt-1 block">

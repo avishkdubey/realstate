@@ -77,7 +77,7 @@ export default async function HomePage() {
           <ScrollReveal>
             <div className="flex flex-wrap items-end justify-between gap-6">
               <div>
-                <p className="eyebrow text-bronze">Currently building</p>
+                <p className="eyebrow text-accent">Currently building</p>
                 <h2 className="measure mt-6 text-h3">
                   <RevealLine>Three under construction,</RevealLine>
                   <RevealLine>two more on the way.</RevealLine>
@@ -103,10 +103,10 @@ export default async function HomePage() {
       </section>
 
       {/* What buyers actually screen on: transparency, not adjectives. */}
-      <section className="section bg-cream/50">
+      <section className="section bg-surface-2">
         <div className="container-page grid gap-16 lg:grid-cols-[1fr_1.2fr]">
           <FadeInView>
-            <p className="eyebrow text-bronze">How we work</p>
+            <p className="eyebrow text-accent">How we work</p>
           </FadeInView>
           <FadeInView delay={0.05}>
             <ul className="space-y-8">
@@ -130,7 +130,7 @@ export default async function HomePage() {
             <LocationMap locations={locations} projectCounts={projectCounts} />
           </FadeInView>
           <FadeInView delay={0.05}>
-            <p className="eyebrow text-bronze">Where we build</p>
+            <p className="eyebrow text-accent">Where we build</p>
             <h2 className="measure mt-6 text-h3">
               Six corridors, west and north of the river.
             </h2>
@@ -149,7 +149,7 @@ export default async function HomePage() {
       </section>
 
       {/* NRI strip */}
-      <section className="bg-charcoal text-ivory">
+      <section className="bg-surface-3 border-y border-hairline">
         <div className="container-page grid gap-10 py-20 lg:grid-cols-[1.2fr_1fr] lg:items-center">
           <div>
             <p className="eyebrow text-gold-soft">Buying from abroad</p>
@@ -179,7 +179,7 @@ export default async function HomePage() {
       {testimonials.length > 0 && (
         <section className="section">
           <div className="container-page">
-            <p className="eyebrow text-bronze">From people who bought</p>
+            <p className="eyebrow text-accent">From people who bought</p>
             <div className="mt-12">
               <TestimonialCarousel items={testimonials} />
             </div>
@@ -189,10 +189,10 @@ export default async function HomePage() {
 
       {/* Insights teaser */}
       {latestPosts.length > 0 && (
-        <section className="section bg-cream/50">
+        <section className="section bg-surface-2">
           <div className="container-page">
             <div className="flex flex-wrap items-end justify-between gap-6">
-              <p className="eyebrow text-bronze">Insights</p>
+              <p className="eyebrow text-accent">Insights</p>
               <Link
                 href="/insights"
                 className="eyebrow text-foreground border-b border-current pb-1"
@@ -208,7 +208,7 @@ export default async function HomePage() {
                       <span className="eyebrow text-muted-foreground">
                         {post.category}
                       </span>
-                      <span className="mt-3 block text-h5 group-hover:text-bronze transition-colors">
+                      <span className="mt-3 block text-h5 group-hover:text-accent transition-colors">
                         {post.title}
                       </span>
                       <span className="text-small text-muted-foreground mt-3 block">
@@ -226,7 +226,7 @@ export default async function HomePage() {
       <section className="section">
         <div className="container-page">
           <FadeInView>
-            <p className="eyebrow text-bronze">Demonstration build</p>
+            <p className="eyebrow text-accent">Demonstration build</p>
             <h2 className="measure mt-6 text-h4">
               All content on this site is placeholder, and no project carries a
               RERA registration.

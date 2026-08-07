@@ -57,7 +57,7 @@ export default async function PostPage({ params }: PageProps<"/insights/[slug]">
             <span className="text-foreground">{post.category}</span>
           </nav>
 
-          <p className="eyebrow text-bronze mt-10">
+          <p className="eyebrow text-accent mt-10">
             {formatMonth(post.publishedAt)} · {post.readingMinutes} min read
           </p>
           <h1 className="measure mt-6 text-h3 md:text-h2">{post.title}</h1>
@@ -103,9 +103,9 @@ export default async function PostPage({ params }: PageProps<"/insights/[slug]">
       </article>
 
       {others.length > 0 && (
-        <section className="section bg-cream/50">
+        <section className="section bg-surface-2">
           <div className="container-page">
-            <p className="eyebrow text-bronze">Keep reading</p>
+            <p className="eyebrow text-accent">Keep reading</p>
             <ul className="mt-10 grid gap-10 sm:grid-cols-2">
               {others.map((other) => (
                 <li key={other.slug}>
@@ -113,7 +113,7 @@ export default async function PostPage({ params }: PageProps<"/insights/[slug]">
                     <span className="eyebrow text-muted-foreground">
                       {other.category}
                     </span>
-                    <span className="measure mt-3 block text-h5 group-hover:text-bronze transition-colors">
+                    <span className="measure mt-3 block text-h5 group-hover:text-accent transition-colors">
                       {other.title}
                     </span>
                   </Link>
