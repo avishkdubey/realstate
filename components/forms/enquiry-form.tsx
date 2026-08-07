@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -12,6 +12,7 @@ import {
 } from "@/lib/enquiry-schema";
 import { whatsappLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
+import { useVisitor } from "@/lib/visitor-storage";
 
 /**
  * The enquiry form.
@@ -38,11 +39,19 @@ export function EnquiryForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<EnquiryInput>({
     resolver: zodResolver(enquirySchema),
     defaultValues: { projectSlug, source, isNri: false, consent: false },
   });
+
+  const visitor = useVisitor();
+  useEffect(() => {
+    if (visitor?.name) {
+      setValue("name", visitor.name);
+    }
+  }, [visitor?.name, setValue]);
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);

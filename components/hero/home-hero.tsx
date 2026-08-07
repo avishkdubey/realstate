@@ -7,6 +7,7 @@ import { DeferredConstruction } from "@/components/hero/deferred-construction";
 import { ScrollFrameSequence } from "@/components/hero/scroll-frame-sequence";
 import { siteConfig } from "@/lib/site-config";
 import { whatsappLink } from "@/lib/whatsapp";
+import { useVisitor } from "@/lib/visitor-storage";
 
 /**
  * The home hero.
@@ -35,6 +36,8 @@ export function HomeHero() {
   // list, and an inline arrow would re-run the capability check every render.
   const handleActive = useCallback((active: boolean) => setSceneActive(active), []);
 
+  const visitor = useVisitor();
+
   return (
     <ScrollFrameSequence
       frameCount={36}
@@ -62,9 +65,15 @@ export function HomeHero() {
 
       <div className="relative flex h-full items-end">
         <div className="container-page pb-[12vh]">
-          <p className="eyebrow text-gold-soft animate-[rise_0.9s_var(--ease-entrance)_both]">
-            Ahmedabad · Since {siteConfig.foundedYear}
-          </p>
+          {visitor?.name ? (
+            <p className="eyebrow text-gold-soft animate-[rise_0.9s_var(--ease-entrance)_both]">
+              Welcome back, {visitor.name}
+            </p>
+          ) : (
+            <p className="eyebrow text-gold-soft animate-[rise_0.9s_var(--ease-entrance)_both]">
+              Ahmedabad · Since {siteConfig.foundedYear}
+            </p>
+          )}
 
           <h1 className="text-ivory mt-6 max-w-[16ch] text-h2 leading-[1.02] md:text-h1">
             <span className="block animate-[rise_1s_var(--ease-entrance)_0.08s_both]">
