@@ -167,8 +167,12 @@ export function WhatWeBuild() {
               </article>
             ))}
 
-            {/* The track ends on an action rather than trailing off. */}
-            <div className="flex w-[78vw] shrink-0 snap-start items-center sm:w-[52vw] lg:w-[24vw]">
+            {/* The track ends on an action rather than trailing off.
+                Sized to its content, not to a card width — as a 24vw block it
+                left roughly 330px of empty ground between the link and the end
+                of the track, which read as the slider failing to reach the end
+                rather than as a deliberate closing note. */}
+            <div className="flex shrink-0 snap-start items-center pr-6 sm:pr-8">
               <Link
                 href="/projects"
                 className="eyebrow text-foreground border-b border-current pb-1"

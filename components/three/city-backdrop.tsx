@@ -100,9 +100,17 @@ const SKYLINE: Placement[] = [
  * stay under the tower's 20.7 in the near and middle ground — the subject has
  * to be the tallest thing in its own frame.
  */
+/* Note the absence of `cityBlock` here, which is deliberate and load-bearing.
+   That asset is 24 MB, and one placement of it put the whole file on the hero's
+   critical path — the hero rendered nothing at all for 5–10 seconds on a cold
+   load while it streamed. The untextured 2.4 MB model carries the same
+   silhouette at this distance for a tenth of the weight, and the difference is
+   invisible past about twenty units. `cityBlock` still earns its keep in the
+   city-block tour, where it is the subject, seen close, and loaded lazily well
+   below the fold. */
 const SITE_SURROUNDS: Placement[] = [
   // Near neighbours, flanking the camera's arc without crossing it.
-  { asset: "cityBlock", position: [-26, 0, -20], height: 12, rotationY: 0.5 },
+  { asset: "apartmentHouse", position: [-26, 0, -20], height: 12, rotationY: 0.5 },
   { asset: "apartmentHouse", position: [27, 0, -24], height: 14, rotationY: -0.7 },
   // Middle distance.
   { asset: "apartmentHouse", position: [-30, 0, -38], height: 17, rotationY: 1.3 },
@@ -314,7 +322,9 @@ function AssetGroup({
   );
 }
 
-/* Warm the two models the high tier will ask for, so the window is not empty
-   while the interior is already walkable. */
+/* Warm the light model only.
+   `cityBlock` is 24 MB and is now used by exactly one scene, which lazy-loads
+   it on approach — preloading it here would put that 24 MB back on the hero's
+   critical path through the back door, which is the bug this module just spent
+   a paragraph explaining. */
 useGLTF.preload(GLB_CATALOG.apartmentHouse.path);
-useGLTF.preload(GLB_CATALOG.cityBlock.path);

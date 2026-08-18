@@ -26,7 +26,24 @@ import {
  * charging them a contact detail for it is what makes them leave.
  */
 export function RentOrBuy() {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", loop: false });
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    loop: false,
+    /**
+     * Don't start a carousel drag on a slider.
+     *
+     * Embla claims the pointer on `pointerdown` anywhere in the viewport, which
+     * swallowed click-to-jump on the range inputs inside the slides — the
+     * thumbs only moved if you dragged them, and clicking the track (the first
+     * thing anyone tries) did nothing at all. Handing those events back to the
+     * input fixes both calculators, and dragging the carousel still works from
+     * anywhere else on the slide.
+     */
+    watchDrag: (_api, event) => {
+      const target = event.target as HTMLElement | null;
+      return !target?.closest('input[type="range"]');
+    },
+  });
   const [selected, setSelected] = useState(0);
 
   const prev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
@@ -90,12 +107,19 @@ export function RentOrBuy() {
           </div>
         </div>
 
+        {/* Full-width slides, not a 58% peek.
+            A peek is right for cards, where the clipped neighbour is an
+            invitation. These are calculators: at 58% the second panel ran from
+            58% to 116% of the viewport and its "Total interest" figure was
+            clipped off the right edge entirely — a number the visitor came for,
+            unreachable. The tab pair above the rail does the discoverability
+            job that the peek was doing. */}
         <div className="mt-14 overflow-hidden" ref={emblaRef}>
           <div className="flex gap-8">
-            <div className="min-w-0 flex-[0_0_100%] lg:flex-[0_0_58%]">
+            <div className="min-w-0 flex-[0_0_100%] lg:flex-[0_0_78%]">
               <RentVsBuyCalculator />
             </div>
-            <div className="min-w-0 flex-[0_0_100%] lg:flex-[0_0_58%]">
+            <div className="min-w-0 flex-[0_0_100%] lg:flex-[0_0_78%]">
               <EmiCalculator startingPrice={RENT_VS_BUY_DEFAULTS.price} />
             </div>
           </div>

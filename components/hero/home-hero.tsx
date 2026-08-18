@@ -65,6 +65,19 @@ export function HomeHero() {
       // loss can bring it straight back.
       dimmed={sceneActive}
     >
+      {/* The ground the hero sits on while the scene streams in.
+          With the photographic backdrop suppressed, a cold load previously left
+          flat #0d0d0d behind the copy until Three.js and the models arrived —
+          which reads as a page that has failed rather than one that is
+          arriving. A warm vertical wash with a low glow where the tower will
+          stand costs nothing, needs no request, and makes the wait look
+          deliberate. It stays underneath the canvas afterwards, so there is
+          never a hard edge if the scene is slow or dies. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[radial-gradient(120%_80%_at_60%_100%,#1c1913_0%,#131210_45%,#0d0d0d_100%)]"
+      />
+
       <DeferredConstruction sectionRef={sectionRef} onActive={handleActive} />
 
       {/* Scrim: the render is bright, the type is light. Lighter over the 3D,

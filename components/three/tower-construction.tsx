@@ -60,6 +60,17 @@ const _lookTarget = new THREE.Vector3();
 const CRANE_MAST_HEIGHT = 24;
 
 /**
+ * How far a balcony projects from the facade, and how tall its balustrade is.
+ *
+ * 0.9 against a 1.5 bay and a 1.15 storey — proportionally a balcony about
+ * 2.3 m deep, which is a real one you can put a chair on rather than the
+ * decorative ledge the first pass produced. Shared by the geometry and by the
+ * placement maths so the tray and its railing cannot drift apart.
+ */
+const BALCONY_DEPTH = 0.9;
+const BALCONY_RAIL = 0.52;
+
+/**
  * The camera route, as position/target pairs against scroll progress.
  *
  * A drone shot, not a turntable: it starts at street level looking up at an
@@ -155,11 +166,17 @@ export function TowerConstruction({
     const slabs = slabPlacements();
     const facade = tier === "low" ? [] : facadePlacements();
     const caps = pileCapPlacements();
-    /* Mullions and balconies are the two elements that carry most of the
-       "this is a home, not a massing block" reading, so the medium tier keeps
-       balconies and drops only the mullions — they are the finer detail and the
-       first thing that stops resolving on a smaller viewport. */
-    const mullions = tier === "high" ? mullionPlacements() : [];
+    /* Mullions and balconies carry most of the "this is a home, not a massing
+       block" reading, so both now survive to the medium tier and only the low
+       tier loses them.
+
+       They were high-only, and that was the wrong call: `qualityTier` demotes
+       to medium on four cores or fewer, which covers a very large share of real
+       laptops as well as every automated browser — so the detail that makes the
+       facade legible was missing for most of the audience it was built for.
+       216 instances on an existing draw call is not what will cost a mid device
+       its frame budget. */
+    const mullions = tier === "low" ? [] : mullionPlacements();
     const balconies = tier === "low" ? [] : balconyPlacements();
     return {
       columns,
@@ -335,7 +352,9 @@ export function TowerConstruction({
         const [x, y, z] = item.position;
         // Slabs trail their columns slightly — the deck is poured after the
         // frame is stood, and the offset is what makes the sequence legible.
-        const reveal = staggeredReveal(structure - 0.04, item.floor, TOWER.floors, 3);
+        // Passed as `lag`, not subtracted from progress: subtracting pushes the
+        // top floor's ramp past 1 so it can never finish.
+        const reveal = staggeredReveal(structure, item.floor, TOWER.floors, 3, 0.04);
         writeInstance(slabs, i, x, y, z, 0, reveal, TOWER.slabThickness);
       }
       slabs.instanceMatrix.needsUpdate = true;
@@ -487,21 +506,49 @@ export function TowerConstruction({
       for (let i = 0; i < layout.balconies.length; i++) {
         const item = layout.balconies[i];
         const [x, y, z] = item.position;
-        const reveal = staggeredReveal(structure - 0.06, item.floor, TOWER.floors, 3);
+        const reveal = staggeredReveal(structure, item.floor, TOWER.floors, 3, 0.06);
         // The tray sits at the storey's floor level, not its centre.
         const trayY = y - TOWER.storey / 2 + TOWER.slabThickness / 2;
-        writeInstance(balconies, i, x, trayY, z, item.rotationY, reveal, TOWER.slabThickness);
+
+        /* Projected outward from the facade, not centred on it.
+           The tray was previously written at the facade line itself, so half of
+           a 0.62-deep box was buried inside the building and the visible
+           remainder — 0.31 — barely cleared the slab's own 0.12 overhang. The
+           balconies were rendering the whole time and read as nothing at all.
+           Now the near face starts at the facade and the tray projects its full
+           depth beyond it, which is also what a balcony is.
+
+           "Outward" is derived from the panel's rotation, exactly as the room
+           planes derive "inward" — the two elevations face opposite ways and a
+           fixed offset would push the rear ones through the building. */
+        const outX = Math.sin(item.rotationY);
+        const outZ = Math.cos(item.rotationY);
+        const trayMid = BALCONY_DEPTH / 2;
+
+        writeInstance(
+          balconies,
+          i,
+          x + outX * trayMid,
+          trayY,
+          z + outZ * trayMid,
+          item.rotationY,
+          reveal,
+          TOWER.slabThickness,
+        );
+
         if (railings) {
           const railReveal = staggeredReveal(finishing, item.floor, TOWER.floors, 3);
+          // At the outer lip of the tray, standing on it.
+          const railOut = BALCONY_DEPTH - 0.03;
           writeInstance(
             railings,
             i,
-            x,
-            trayY + 0.28,
-            z,
+            x + outX * railOut,
+            trayY + BALCONY_RAIL / 2,
+            z + outZ * railOut,
             item.rotationY,
             railReveal,
-            0.5,
+            BALCONY_RAIL,
           );
         }
       }
@@ -670,7 +717,9 @@ export function TowerConstruction({
             castShadow={shadows}
             receiveShadow={shadows}
           >
-            <boxGeometry args={[TOWER.spanX * 0.9, TOWER.slabThickness, 0.62]} />
+            <boxGeometry
+              args={[TOWER.spanX * 0.9, TOWER.slabThickness, BALCONY_DEPTH]}
+            />
             <meshStandardMaterial color={HEX.concrete} roughness={0.9} metalness={0} />
           </instancedMesh>
 
@@ -680,7 +729,7 @@ export function TowerConstruction({
             ref={railingRef}
             args={[undefined, undefined, layout.balconies.length]}
           >
-            <boxGeometry args={[TOWER.spanX * 0.9, 0.5, 0.04]} />
+            <boxGeometry args={[TOWER.spanX * 0.9, BALCONY_RAIL, 0.04]} />
             <meshStandardMaterial
               color={HEX.glass}
               roughness={0.12}

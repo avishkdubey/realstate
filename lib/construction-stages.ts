@@ -83,10 +83,31 @@ export function staggeredReveal(
   index: number,
   count: number,
   overlap = 2.5,
+  /**
+   * Delays the whole ramp, as a fraction of stage progress. Used where one
+   * trade must trail another — slabs are poured after their columns are stood.
+   * Expressed here rather than by subtracting from `progress` at the call site,
+   * because subtracting means the last item's ramp runs past 1 and it can never
+   * finish (see below).
+   */
+  lag = 0,
 ): number {
   if (count <= 0) return 0;
-  const span = 1 / count;
-  const start = index * span;
-  const window = span * overlap;
+  const window = Math.min(overlap / count, 1);
+
+  /**
+   * The last item must *start* at `1 - window`, so that it *finishes* exactly
+   * as the stage does.
+   *
+   * The original spacing was `index / count`, which is a real bug rather than a
+   * rounding matter: with 18 floors and an overlap of 3, floor 17 started at
+   * 0.944 and its ramp needed until 1.11 to complete. At full stage progress it
+   * reached 0.26 and floor 16 reached 0.74 — so the top three storeys of the
+   * tower were permanently unfinished, which showed up on screen as short
+   * columns hanging in mid-air, connected to nothing.
+   */
+  const usable = Math.max(1 - window - lag, 0);
+  const start = count > 1 ? lag + (index / (count - 1)) * usable : lag;
+
   return smoothstep((progress - start) / window);
 }
