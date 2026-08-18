@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 import { useReducedMotionPreference } from "@/components/providers/reduced-motion-provider";
 import { siteConfig } from "@/lib/site-config";
@@ -28,25 +29,99 @@ import { useVisitor } from "@/lib/visitor-storage";
  * ordinary markup, as it was throughout the 3D versions, for the reason
  * `CLAUDE.md` §7 gives: "bots read HTML, not WebGL pixels."
  */
+/** How much the photograph grows across the hero's exit. 1.0 → 1.16. */
+const SCROLL_ZOOM = 0.16;
+
 export function HomeHero() {
   const visitor = useVisitor();
   const reducedMotion = useReducedMotionPreference();
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const zoomRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Scroll-linked zoom.
+   *
+   * Replaces a time-based CSS loop that drifted whether or not anyone was
+   * looking at it. Tying the scale to scroll instead makes the movement the
+   * visitor's own, which is the difference between a page that responds and a
+   * page that merely animates.
+   *
+   * Three decisions worth stating:
+   *
+   * **A rAF loop, not a `scroll` listener.** Lenis drives scrolling from its own
+   * loop, so anything listening to the native event runs a frame behind it and
+   * the image visibly lags the page. Same reasoning as
+   * `components/three/use-scroll-progress.ts`.
+   *
+   * **It cannot use that shared hook.** The hook measures how far a *tall*
+   * section has travelled through the viewport and returns 0 when
+   * `height - innerHeight <= 0`. This hero is exactly one viewport tall, so its
+   * travel is zero and the hook would report 0 forever. What is measured here is
+   * different: how far the hero has scrolled *out of* the top of the screen.
+   *
+   * **The transform is written straight to the node.** Scroll must never
+   * re-render React — going through state here would run the whole hero, and
+   * everything under it, on every frame of a scroll.
+   *
+   * One thing to know before debugging this: Chrome suspends
+   * `requestAnimationFrame` entirely in a backgrounded tab, so the scale freezes
+   * at its last value and no inline transform appears at all if the tab was
+   * never visible. That is correct behaviour — but it makes the zoom look
+   * broken when inspected through automation, which drives a tab that is
+   * usually hidden. Check `document.visibilityState` before concluding
+   * anything.
+   */
+  useEffect(() => {
+    if (reducedMotion) return;
+    const section = sectionRef.current;
+    const layer = zoomRef.current;
+    if (!section || !layer) return;
+
+    let frame = 0;
+    let painted = -1;
+
+    const tick = () => {
+      frame = requestAnimationFrame(tick);
+      const rect = section.getBoundingClientRect();
+      // 0 while the hero fills the screen, 1 once it has fully left the top.
+      const progress = Math.min(
+        1,
+        Math.max(0, -rect.top / Math.max(rect.height, 1)),
+      );
+      if (Math.abs(progress - painted) < 0.001) return;
+      painted = progress;
+      layer.style.transform = `scale(${1 + progress * SCROLL_ZOOM})`;
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+      layer.style.transform = "";
+    };
+  }, [reducedMotion]);
+
   return (
-    <section className="relative h-svh min-h-[600px] w-full overflow-hidden">
-      {/* The LCP element. `priority` so it is discovered in the initial HTML
-          rather than after hydration, and `sizes="100vw"` so a phone is not
-          handed the 2560px variant. */}
-      <Image
-        src="/images/hero-city-night.webp"
-        alt="A city skyline at dusk, towers lit against a monsoon sky"
-        fill
-        priority
-        sizes="100vw"
-        className={`object-cover ${
-          reducedMotion ? "" : "animate-[drift_36s_ease-in-out_infinite_alternate]"
-        }`}
-      />
+    <section
+      ref={sectionRef}
+      className="relative h-svh min-h-[600px] w-full overflow-hidden"
+    >
+      {/* Scaled from its centre, so growing never uncovers an edge. The wrapper
+          carries the transform rather than the <img> itself, because next/image
+          owns that element's className and style. */}
+      <div ref={zoomRef} className="absolute inset-0 will-change-transform">
+        {/* The LCP element. `priority` so it is discovered in the initial HTML
+            rather than after hydration, and `sizes="100vw"` so a phone is not
+            handed the 2560px variant. */}
+        <Image
+          src="/images/hero-city-night.webp"
+          alt="A city skyline at dusk, towers lit against a monsoon sky"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+      </div>
 
       {/* Scrim. Weighted to the foot, where the copy sits, and only light at
           the top so the skyline itself is not washed out. Two stops rather than
