@@ -51,6 +51,17 @@ export type UprightModel = {
   unitScale: number;
   /** Multiply by the desired height and add to y to stand the model on y = 0. */
   footY: number;
+  /**
+   * Where the model's horizontal centre sits relative to its own origin, per
+   * unit of height. Negate, multiply by the desired height, and add to x/z to
+   * bring it onto the origin.
+   *
+   * Not every asset is modelled about its centre — `low_poly_night_city` runs
+   * x −121 → +74, so its true centre is 23 units off. A camera that orbits the
+   * origin, as ours does, would then swing around a point outside the model and
+   * push it out of frame on one side.
+   */
+  centerXZ: { x: number; z: number };
   /** Footprint after correction, per unit of height. For framing a camera. */
   aspect: { x: number; z: number };
 };
@@ -102,9 +113,11 @@ export function useUprightModel(
     const box = new THREE.Box3().setFromObject(upright);
     const size = box.getSize(new THREE.Vector3());
     const unitScale = size.y > 0 ? 1 / size.y : 1;
+    const center = box.getCenter(new THREE.Vector3());
     return {
       unitScale,
       footY: -box.min.y * unitScale,
+      centerXZ: { x: center.x * unitScale, z: center.z * unitScale },
       aspect: { x: size.x * unitScale, z: size.z * unitScale },
     };
   }, [upright]);

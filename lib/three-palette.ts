@@ -43,6 +43,29 @@ export const HEX = {
   lamp: 0xffb877,
 } as const;
 
+/**
+ * The night set, for the hero skyline.
+ *
+ * Separate from `HEX` because these are lighting values rather than surface
+ * colours, and because a night scene deliberately does *not* fade to the page
+ * ground: distant geometry dissolving into #0d0d0d reads as the model being cut
+ * off, where dissolving into a deep navy reads as a sky. `sky` is therefore the
+ * scene background and the fog tint as well as the ambient tint — all three
+ * must be the same value or the horizon shows as a band.
+ */
+export const NIGHT = {
+  /** Background, fog and ambient. A blue deep enough to still read as dark. */
+  sky: 0x0b1220,
+  /** Moonlight — cool, and only strong enough to separate silhouettes. */
+  moon: 0x9fb6de,
+  /** Warm sodium glow thrown up off the streets. */
+  glow: 0xffa457,
+  /** The hemisphere light's lower half: street bounce, not sky. */
+  streetBounce: 0x1a1410,
+  /** Ground plane. Near-black, with enough sheen to catch the glow. */
+  ground: 0x0a0d14,
+} as const;
+
 export const COLORS = {
   ground: new THREE.Color(HEX.ground),
   surface: new THREE.Color(HEX.surface),

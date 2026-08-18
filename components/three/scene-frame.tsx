@@ -53,6 +53,17 @@ export type SceneFrameProps = {
   transparent?: boolean;
   /** Distance fog, matched to the page ground so the scene fades into it. */
   fog?: { near: number; far: number } | false;
+  /**
+   * Overrides the clear colour and the fog tint, which are otherwise both the
+   * page ground.
+   *
+   * Matching the page is right for a scene that has to sit invisibly inside the
+   * document. A night scene is the exception: distant geometry fading to pure
+   * #0d0d0d reads as the model being cut off, where fading to a deep navy reads
+   * as a sky. Fog and background must move together or the horizon shows as a
+   * band.
+   */
+  background?: number;
   className?: string;
   /** Extra effects beyond the house grade. */
   effects?: (tier: QualityTier) => ReactNode;
@@ -63,6 +74,7 @@ export function SceneFrame({
   camera = { position: [0, 2, 8], fov: 38 },
   transparent = false,
   fog = { near: 18, far: 60 },
+  background = HEX.ground,
   className,
   effects,
 }: SceneFrameProps) {
@@ -121,11 +133,12 @@ export function SceneFrame({
         gl.toneMappingExposure = 1.45;
       }}
     >
-      {!transparent && <color attach="background" args={[HEX.ground]} />}
+      {!transparent && <color attach="background" args={[background]} />}
       {fog && (
         /* Aerial perspective. Without it a tower has no sense of scale —
-           everything reads as a tabletop model. */
-        <fog attach="fog" args={[HEX.ground, fog.near, fog.far]} />
+           everything reads as a tabletop model. Tinted to match the background
+           exactly, so distance dissolves into the sky with no visible seam. */
+        <fog attach="fog" args={[background, fog.near, fog.far]} />
       )}
 
       {/* Two boundaries, not one. Sharing a boundary means anything the
