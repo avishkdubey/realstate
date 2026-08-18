@@ -14,12 +14,20 @@ import {
 } from "@/lib/construction-stages";
 import { COLORS, HEX } from "@/lib/three-palette";
 import {
+  balconyPlacements,
+  BAND,
   columnPlacements,
   facadePlacements,
+  FIRST_CLAD_FLOOR,
   FOOTPRINT,
+  GLASS_OFFSET,
   litWindows,
+  mullionPlacements,
   pileCapPlacements,
+  PODIUM,
+  PODIUM_HEIGHT,
   slabPlacements,
+  SPANDREL_OFFSET,
   TOWER,
   TOWER_HEIGHT,
 } from "@/lib/tower-geometry";
@@ -147,15 +155,35 @@ export function TowerConstruction({
     const slabs = slabPlacements();
     const facade = tier === "low" ? [] : facadePlacements();
     const caps = pileCapPlacements();
-    return { columns, slabs, facade, caps, lit: litWindows(facade.length) };
+    /* Mullions and balconies are the two elements that carry most of the
+       "this is a home, not a massing block" reading, so the medium tier keeps
+       balconies and drops only the mullions — they are the finer detail and the
+       first thing that stops resolving on a smaller viewport. */
+    const mullions = tier === "high" ? mullionPlacements() : [];
+    const balconies = tier === "low" ? [] : balconyPlacements();
+    return {
+      columns,
+      slabs,
+      facade,
+      caps,
+      mullions,
+      balconies,
+      lit: litWindows(facade.length),
+    };
   }, [tier]);
 
   const columnsRef = useRef<THREE.InstancedMesh>(null);
   const slabsRef = useRef<THREE.InstancedMesh>(null);
   const facadeRef = useRef<THREE.InstancedMesh>(null);
   const glassRef = useRef<THREE.InstancedMesh>(null);
+  const roomsRef = useRef<THREE.InstancedMesh>(null);
+  const mullionsRef = useRef<THREE.InstancedMesh>(null);
+  const balconyRef = useRef<THREE.InstancedMesh>(null);
+  const railingRef = useRef<THREE.InstancedMesh>(null);
   const capsRef = useRef<THREE.InstancedMesh>(null);
   const coreRef = useRef<THREE.Mesh>(null);
+  const podiumRef = useRef<THREE.Mesh>(null);
+  const parapetRef = useRef<THREE.Mesh>(null);
   const crownRef = useRef<THREE.Mesh>(null);
   const craneRef = useRef<THREE.Group>(null);
   const craneMastRef = useRef<THREE.Mesh>(null);
@@ -167,11 +195,23 @@ export function TowerConstruction({
      hand: it is mutated every frame, and a ref is the one place React sanctions
      keeping something mutable. */
   const glassColor = useRef<THREE.InstancedBufferAttribute | null>(null);
+  /** Same idea for the room planes sitting behind the glass. */
+  const roomColor = useRef<THREE.InstancedBufferAttribute | null>(null);
 
   // Start every element hidden, so the first painted frame is an empty site
   // rather than a finished tower that then collapses to nothing.
   useLayoutEffect(() => {
-    for (const mesh of [columnsRef, slabsRef, facadeRef, glassRef, capsRef]) {
+    for (const mesh of [
+      columnsRef,
+      slabsRef,
+      facadeRef,
+      glassRef,
+      roomsRef,
+      mullionsRef,
+      balconyRef,
+      railingRef,
+      capsRef,
+    ]) {
       const instanced = mesh.current;
       if (!instanced) continue;
       _matrix.makeScale(0.0001, 0.0001, 0.0001);
@@ -192,8 +232,21 @@ export function TowerConstruction({
       glassColor.current = attribute;
     }
 
+    const rooms = roomsRef.current;
+    if (rooms && layout.facade.length > 0) {
+      // Starts black: an unlit room is a dark void behind glass, and that is
+      // exactly what it should look like before handover.
+      const attribute = new THREE.InstancedBufferAttribute(
+        new Float32Array(layout.facade.length * 3),
+        3,
+      );
+      rooms.geometry.setAttribute("color", attribute);
+      roomColor.current = attribute;
+    }
+
     return () => {
       glassColor.current = null;
+      roomColor.current = null;
     };
   }, [layout]);
 
@@ -224,9 +277,20 @@ export function TowerConstruction({
     _camTarget.x += pointer.x * 1.1;
     _camTarget.y += pointer.y * 0.6;
 
-    // Frame-rate independent damping. This is what turns a scroll flick into a
-    // glide instead of a cut.
-    const k = 1 - Math.exp(-3 * delta);
+    /* Frame-rate independent damping. This is what turns a scroll flick into a
+       glide instead of a cut.
+
+       The rate was 3, a ~330ms time constant, and that is what made the scene
+       feel unresponsive: scroll and the building moves, but the camera arrives
+       a third of a second later, so the connection between the wheel and the
+       image is not legible. At 9 the settle is ~110ms — still visibly damped,
+       still no cut on a flick, but the camera now tracks the scroll closely
+       enough to feel driven by it.
+
+       The *aim* is not damped at all, only the position. Damping both meant the
+       tower drifted out of frame on fast scrolls and swam back, which is the
+       motion-sickness failure `CLAUDE.md` §7 rules out. */
+    const k = 1 - Math.exp(-9 * delta);
     camera.position.lerp(_camTarget, k);
     camera.lookAt(_lookTarget);
 
@@ -283,31 +347,191 @@ export function TowerConstruction({
     const facade = facadeRef.current;
     const glass = glassRef.current;
 
+    const rooms = roomsRef.current;
+
     if (facade && glass) {
       const colors = glassColor.current;
+      const roomColors = roomColor.current;
       for (let i = 0; i < layout.facade.length; i++) {
         const item = layout.facade[i];
         const [x, y, z] = item.position;
-        const reveal = staggeredReveal(finishing, item.floor, TOWER.floors, 3);
-        writeInstance(facade, i, x, y, z, item.rotationY, reveal, TOWER.storey);
-        writeInstance(glass, i, x, y, z, item.rotationY, reveal, TOWER.storey);
+        /* Cladding is staggered against the *clad* floors, not all 18. The
+           bottom two are inside the podium and carry no panels, so measuring
+           the ramp over the full height meant the first ~11% of the finishing
+           stage animated nothing at all — a visible dead beat in the middle of
+           the scroll. */
+        const reveal = staggeredReveal(
+          finishing,
+          item.floor - FIRST_CLAD_FLOOR,
+          TOWER.floors - FIRST_CLAD_FLOOR,
+          3,
+        );
+
+        /* Each band is written at its own centre and grown from its own base.
+           The previous version passed `TOWER.storey` as the height for both,
+           while the geometries were 0.34 and 0.58 of a storey — so the
+           base-pinning offset was computed against a height neither mesh had,
+           and the panels slid vertically as they revealed instead of growing
+           in place. */
+        writeInstance(
+          facade,
+          i,
+          x,
+          y + SPANDREL_OFFSET * TOWER.storey,
+          z,
+          item.rotationY,
+          reveal,
+          BAND.spandrel * TOWER.storey,
+        );
+        writeInstance(
+          glass,
+          i,
+          x,
+          y + GLASS_OFFSET * TOWER.storey,
+          z,
+          item.rotationY,
+          reveal,
+          BAND.glass * TOWER.storey,
+        );
+        if (rooms) {
+          /* The room plane sits a little behind the glass rather than on it.
+             That gap is the whole trick: a lit pane coplanar with the glazing
+             is a coloured tile, but a lit surface set back from it reads as a
+             room with a light on, because the mullion and the reveal cast onto
+             it and it is occluded at grazing angles.
+
+             "Behind" is derived from the panel's own rotation — each elevation
+             faces a different way, so a fixed offset would push half of them
+             out through the facade. */
+          const inset = 0.34;
+          writeInstance(
+            rooms,
+            i,
+            x - Math.sin(item.rotationY) * inset,
+            y + GLASS_OFFSET * TOWER.storey,
+            z - Math.cos(item.rotationY) * inset,
+            item.rotationY,
+            reveal,
+            BAND.glass * TOWER.storey,
+          );
+        }
 
         // Windows warm up one by one through handover rather than all at once —
         // a tower that lights up in a single frame reads as a light switch, one
         // that fills in over a few seconds reads as an evening.
+        const on = layout.lit[i] * smoothstep((handover - (i % 7) / 9) * 2);
         if (colors) {
-          const on = layout.lit[i] * smoothstep((handover - (i % 7) / 9) * 2);
+          /* The glass itself barely moves. Previously it was lerped the whole
+             way to lamp colour, which made the *pane* the light source — the
+             tower ended up looking like a grid of orange tiles. Glass picks up
+             a little warmth; the light comes from the room behind it. */
           colors.setXYZ(
             i,
-            THREE.MathUtils.lerp(COLORS.glass.r, COLORS.lamp.r, on),
-            THREE.MathUtils.lerp(COLORS.glass.g, COLORS.lamp.g, on),
-            THREE.MathUtils.lerp(COLORS.glass.b, COLORS.lamp.b, on),
+            THREE.MathUtils.lerp(COLORS.glass.r, COLORS.lamp.r, on * 0.25),
+            THREE.MathUtils.lerp(COLORS.glass.g, COLORS.lamp.g, on * 0.25),
+            THREE.MathUtils.lerp(COLORS.glass.b, COLORS.lamp.b, on * 0.25),
+          );
+        }
+        if (roomColors) {
+          // Slight per-window variation in warmth and brightness. Identical
+          // lamps in every flat is the single clearest tell of a render.
+          const warmth = 0.72 + ((i * 37) % 11) / 26;
+          roomColors.setXYZ(
+            i,
+            COLORS.lamp.r * on * warmth,
+            COLORS.lamp.g * on * warmth * 0.94,
+            COLORS.lamp.b * on * warmth * 0.86,
           );
         }
       }
       facade.instanceMatrix.needsUpdate = true;
       glass.instanceMatrix.needsUpdate = true;
+      if (rooms) rooms.instanceMatrix.needsUpdate = true;
       if (colors) colors.needsUpdate = true;
+      if (roomColors) roomColors.needsUpdate = true;
+    }
+
+    /* Mullions follow the glazing exactly — they are part of the same trade and
+       arriving separately would look like scaffolding. */
+    const mullions = mullionsRef.current;
+    if (mullions) {
+      for (let i = 0; i < layout.mullions.length; i++) {
+        const item = layout.mullions[i];
+        const [x, y, z] = item.position;
+        const reveal = staggeredReveal(
+          finishing,
+          item.floor - FIRST_CLAD_FLOOR,
+          TOWER.floors - FIRST_CLAD_FLOOR,
+          3,
+        );
+        writeInstance(
+          mullions,
+          i,
+          x,
+          y + GLASS_OFFSET * TOWER.storey,
+          z,
+          item.rotationY,
+          reveal,
+          BAND.glass * TOWER.storey,
+        );
+      }
+      mullions.instanceMatrix.needsUpdate = true;
+    }
+
+    /* Balconies belong to the frame, not the skin — the trays are poured with
+       the slabs — so they ride the structure ramp and are standing before the
+       glazing arrives. That ordering is what a site actually looks like. */
+    const balconies = balconyRef.current;
+    const railings = railingRef.current;
+    if (balconies) {
+      for (let i = 0; i < layout.balconies.length; i++) {
+        const item = layout.balconies[i];
+        const [x, y, z] = item.position;
+        const reveal = staggeredReveal(structure - 0.06, item.floor, TOWER.floors, 3);
+        // The tray sits at the storey's floor level, not its centre.
+        const trayY = y - TOWER.storey / 2 + TOWER.slabThickness / 2;
+        writeInstance(balconies, i, x, trayY, z, item.rotationY, reveal, TOWER.slabThickness);
+        if (railings) {
+          const railReveal = staggeredReveal(finishing, item.floor, TOWER.floors, 3);
+          writeInstance(
+            railings,
+            i,
+            x,
+            trayY + 0.28,
+            z,
+            item.rotationY,
+            railReveal,
+            0.5,
+          );
+        }
+      }
+      balconies.instanceMatrix.needsUpdate = true;
+      if (railings) railings.instanceMatrix.needsUpdate = true;
+    }
+
+    /* ---- Podium ------------------------------------------------------- */
+    /* Rises with the foundation stage, ahead of the tower. A tower springing
+       straight out of a flat ground plane is the other half of why this read as
+       a diagram: real buildings meet the street through something — a lobby, a
+       parking deck, a plinth — and without it there is no sense of an entrance,
+       a scale, or a place to arrive at. */
+    if (podiumRef.current) {
+      const reveal = Math.max(
+        smoothstep(stageProgress(p, "foundation") * 1.3),
+        0.0001,
+      );
+      podiumRef.current.scale.y = reveal;
+      podiumRef.current.position.y = (PODIUM_HEIGHT * reveal) / 2;
+      podiumRef.current.visible = reveal > 0.01;
+    }
+
+    /* ---- Parapet ------------------------------------------------------ */
+    /* The lip that stops a roof looking like a cut. Arrives with the cladding,
+       before the crown. */
+    if (parapetRef.current) {
+      const reveal = smoothstep(finishing * 1.2);
+      parapetRef.current.scale.setScalar(Math.max(reveal, 0.0001));
+      parapetRef.current.visible = reveal > 0.01;
     }
 
     /* ---- Crane -------------------------------------------------------- */
@@ -420,6 +644,10 @@ export function TowerConstruction({
         <meshStandardMaterial color={HEX.concreteLit} roughness={0.88} metalness={0} />
       </instancedMesh>
 
+      {/* Slab edge. The overhang was +0.7 per side, which made every floor a
+          tray projecting a third of a bay past the facade — eighteen of them
+          stacked read as a car park, not a tower. A slab is a shadow line, so
+          it needs to show just enough to draw one. */}
       <instancedMesh
         ref={slabsRef}
         args={[undefined, undefined, Math.max(layout.slabs.length, 1)]}
@@ -427,41 +655,126 @@ export function TowerConstruction({
         receiveShadow={shadows}
       >
         <boxGeometry
-          args={[FOOTPRINT.width + 0.7, TOWER.slabThickness, FOOTPRINT.depth + 0.7]}
+          args={[FOOTPRINT.width + 0.24, TOWER.slabThickness, FOOTPRINT.depth + 0.24]}
         />
         <meshStandardMaterial color={HEX.concrete} roughness={0.92} metalness={0} />
       </instancedMesh>
 
-      {layout.facade.length > 0 && (
+      {/* Balcony trays and their railings. See `balconyPlacements` for why
+          these matter more than their triangle count suggests. */}
+      {layout.balconies.length > 0 && (
         <>
-          {/* Spandrel — the solid band between windows. */}
           <instancedMesh
-            ref={facadeRef}
-            args={[undefined, undefined, layout.facade.length]}
+            ref={balconyRef}
+            args={[undefined, undefined, layout.balconies.length]}
             castShadow={shadows}
+            receiveShadow={shadows}
           >
-            <boxGeometry args={[TOWER.spanX * 0.94, TOWER.storey * 0.34, 0.09]} />
-            <meshStandardMaterial color={HEX.concreteLit} roughness={0.6} metalness={0.15} />
+            <boxGeometry args={[TOWER.spanX * 0.9, TOWER.slabThickness, 0.62]} />
+            <meshStandardMaterial color={HEX.concrete} roughness={0.9} metalness={0} />
           </instancedMesh>
 
-          {/* Glazing. Low roughness with no real transmission: at this scale the
-              environment reflection sells glass far better than refraction, and
-              costs a fraction as much. */}
-          <instancedMesh ref={glassRef} args={[undefined, undefined, layout.facade.length]}>
-            <boxGeometry args={[TOWER.spanX * 0.94, TOWER.storey * 0.58, 0.06]} />
+          {/* Glass balustrade with a metal handrail read as one element at this
+              distance, so it is one thin translucent panel. */}
+          <instancedMesh
+            ref={railingRef}
+            args={[undefined, undefined, layout.balconies.length]}
+          >
+            <boxGeometry args={[TOWER.spanX * 0.9, 0.5, 0.04]} />
             <meshStandardMaterial
-              vertexColors
-              roughness={0.08}
-              metalness={0.55}
-              envMapIntensity={2.4}
+              color={HEX.glass}
+              roughness={0.12}
+              metalness={0.4}
+              transparent
+              opacity={0.55}
+              envMapIntensity={2}
             />
           </instancedMesh>
         </>
       )}
 
+      {layout.facade.length > 0 && (
+        <>
+          {/* The room behind the window.
+
+              Unlit it is black and invisible; lit it is the actual light source
+              in the frame, and bloom picks it up. `meshBasicMaterial` on
+              purpose — this stands in for a lamp, so it must not be shaded by
+              the scene's own lights, and `toneMapped={false}` keeps it from
+              being rolled off by ACES into a dull orange. */}
+          <instancedMesh ref={roomsRef} args={[undefined, undefined, layout.facade.length]}>
+            <boxGeometry args={[TOWER.spanX * 0.88, BAND.glass * TOWER.storey, 0.02]} />
+            <meshBasicMaterial vertexColors toneMapped={false} />
+          </instancedMesh>
+
+          {/* Spandrel — the solid band under each window, sitting on the floor
+              line. Previously this was centred on the same point as the glazing
+              and z-fought with it. */}
+          <instancedMesh
+            ref={facadeRef}
+            args={[undefined, undefined, layout.facade.length]}
+            castShadow={shadows}
+          >
+            <boxGeometry args={[TOWER.spanX * 0.94, BAND.spandrel * TOWER.storey, 0.11]} />
+            <meshStandardMaterial color={HEX.concreteLit} roughness={0.6} metalness={0.15} />
+          </instancedMesh>
+
+          {/* Glazing. Low roughness with no real transmission: at this scale the
+              environment reflection sells glass far better than refraction, and
+              costs a fraction as much. Now genuinely transparent, so the lit
+              room behind it shows through. */}
+          <instancedMesh ref={glassRef} args={[undefined, undefined, layout.facade.length]}>
+            <boxGeometry args={[TOWER.spanX * 0.94, BAND.glass * TOWER.storey, 0.05]} />
+            <meshStandardMaterial
+              vertexColors
+              roughness={0.08}
+              metalness={0.55}
+              envMapIntensity={2.4}
+              transparent
+              opacity={0.62}
+            />
+          </instancedMesh>
+
+          {/* Vertical mullions. A single fin per bay — the detail that turns a
+              flat blue rectangle into a window. */}
+          {layout.mullions.length > 0 && (
+            <instancedMesh
+              ref={mullionsRef}
+              args={[undefined, undefined, layout.mullions.length]}
+              castShadow={shadows}
+            >
+              <boxGeometry args={[0.06, BAND.glass * TOWER.storey, 0.14]} />
+              <meshStandardMaterial color={HEX.concreteLit} roughness={0.35} metalness={0.6} />
+            </instancedMesh>
+          )}
+        </>
+      )}
+
+      {/* The podium the tower stands on. Wider than the tower and only two
+          storeys, so the massing steps rather than extruding straight off the
+          ground. */}
+      <mesh ref={podiumRef} position={[0, PODIUM_HEIGHT / 2, 0]} castShadow={shadows} receiveShadow={shadows}>
+        <boxGeometry
+          args={[
+            FOOTPRINT.width + PODIUM.overhang * 2,
+            PODIUM_HEIGHT,
+            FOOTPRINT.depth + PODIUM.overhang * 2,
+          ]}
+        />
+        <meshStandardMaterial color={0x4a453e} roughness={0.9} metalness={0.05} />
+      </mesh>
+
+      {/* Roof parapet. An open box scaled from the roof line — the lip that
+          stops the top of the building looking sliced off. */}
+      <mesh ref={parapetRef} position={[0, TOWER_HEIGHT + 0.3, 0]} castShadow={shadows}>
+        <boxGeometry args={[FOOTPRINT.width + 0.3, 0.6, FOOTPRINT.depth + 0.3]} />
+        <meshStandardMaterial color={HEX.concreteLit} roughness={0.85} metalness={0.05} />
+      </mesh>
+
       {/* Tower crane. Six meshes for a disproportionate amount of legibility —
           it is the difference between "an abstract mass" and "a site". */}
-      <group ref={craneRef} position={[5.4, 0, -3.2]}>
+      {/* Stood clear of the podium, whose footprint now reaches x ±4.5, z ±3.1. */}
+      <group ref={craneRef} position={[6.8, 0, -4.4]}>
         <mesh ref={craneMastRef} position={[0, CRANE_MAST_HEIGHT / 2, 0]}>
           <boxGeometry args={[0.2, CRANE_MAST_HEIGHT, 0.2]} />
           <meshStandardMaterial color={0x6b5636} roughness={0.7} metalness={0.5} />
@@ -496,7 +809,8 @@ export function TowerConstruction({
       </group>
 
       {/* Crown. The one place the brand gold appears in the scene. */}
-      <mesh ref={crownRef} position={[0, TOWER_HEIGHT + 0.22, 0]}>
+      {/* Sits above the parapet, which now occupies TOWER_HEIGHT + 0.0→0.6. */}
+      <mesh ref={crownRef} position={[0, TOWER_HEIGHT + 0.74, 0]}>
         <boxGeometry args={[FOOTPRINT.width + 0.9, 0.28, FOOTPRINT.depth + 0.9]} />
         <meshStandardMaterial
           color={HEX.gold}

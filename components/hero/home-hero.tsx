@@ -30,7 +30,22 @@ const framePath = (index: number) =>
 
 export function HomeHero() {
   const sectionRef = useRef<HTMLElement | null>(null);
-  const [sceneActive, setSceneActive] = useState(false);
+
+  /**
+   * Starts `true` — assume the 3D backdrop until told otherwise.
+   *
+   * The photographic sequence used to be the default and was faded out once the
+   * scene took over, which meant every visit opened on a still photograph and
+   * then cross-faded to a construction site. That flash was the first thing
+   * anyone noticed about the page.
+   *
+   * Inverting it costs one paint in the other direction: a device that cannot
+   * run WebGL sees a dark hero for a single frame before `onActive(false)`
+   * brings the photography in. The H1, the paragraph and both calls to action
+   * are server-rendered and never depend on either backdrop, so the hero is
+   * complete throughout — which is the property that makes this safe to invert.
+   */
+  const [sceneActive, setSceneActive] = useState(true);
 
   // Stable identity: DeferredConstruction has this in an effect dependency
   // list, and an inline arrow would re-run the capability check every render.

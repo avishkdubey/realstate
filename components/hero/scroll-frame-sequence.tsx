@@ -73,6 +73,12 @@ export function ScrollFrameSequence({
   /* ---------------------------------------------------------------- load */
   useEffect(() => {
     if (reducedMotion) return;
+    /* Nothing to decode if the imagery is not on screen. The hero now decides
+       against the photography before first paint when it is going to render 3D
+       instead, and fetching 36 frames to sit at `opacity: 0` behind a canvas is
+       ~4.7 MB spent on something nobody will see. If the scene later fails,
+       `dimmed` flips back and this effect re-runs. */
+    if (dimmed) return;
 
     // A frame sequence is decoration; decoration should never cost someone
     // their data allowance.
@@ -107,7 +113,7 @@ export function ScrollFrameSequence({
         window.cancelIdleCallback(handle);
       }
     };
-  }, [frameCount, framePath, reducedMotion]);
+  }, [frameCount, framePath, reducedMotion, dimmed]);
 
   /* --------------------------------------------------------------- paint */
   useEffect(() => {
@@ -204,7 +210,11 @@ export function ScrollFrameSequence({
             src={poster}
             alt=""
             aria-hidden
-            fetchPriority="high"
+            /* High only when it is actually the backdrop. When the 3D scene is
+               taking over, this still is a fallback that will most likely never
+               be shown, and racing it against the hero's fonts and the Three.js
+               chunk costs the LCP it was added to protect. */
+            fetchPriority={dimmed ? "low" : "high"}
             className="absolute inset-0 h-full w-full object-cover"
           />
           <canvas

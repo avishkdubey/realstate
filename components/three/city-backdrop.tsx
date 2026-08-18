@@ -6,7 +6,6 @@ import * as THREE from "three";
 
 import { GLB_CATALOG } from "@/lib/glb-catalog";
 import { COLORS } from "@/lib/three-palette";
-import { seededRandom } from "@/lib/tower-geometry";
 import type { QualityTier } from "@/lib/webgl";
 
 /**
@@ -53,13 +52,16 @@ type Placement = {
  * silhouettes overlap, which is what creates the sense of a place continuing
  * past what you can see.
  */
+/* Same re-tune as SITE_SURROUNDS: these were authored against buildings that
+   were buried to roughly half height, so standing them up honestly needs the
+   numbers brought back down or the view from the flat becomes a wall. */
 const SKYLINE: Placement[] = [
-  { asset: "cityBlock", position: [8, 0, -46], height: 26, rotationY: -0.35 },
-  { asset: "apartmentHouse", position: [-22, 0, -58], height: 34, rotationY: 0.2 },
-  { asset: "apartmentHouse", position: [16, 0, -72], height: 44, rotationY: -1.1 },
-  { asset: "apartmentHouse", position: [-6, 0, -86], height: 30, rotationY: 2.4 },
-  { asset: "apartmentHouse", position: [38, 0, -95], height: 52, rotationY: 0.8 },
-  { asset: "apartmentHouse", position: [-42, 0, -104], height: 38, rotationY: 1.7 },
+  { asset: "cityBlock", position: [8, 0, -46], height: 16, rotationY: -0.35 },
+  { asset: "apartmentHouse", position: [-22, 0, -58], height: 21, rotationY: 0.2 },
+  { asset: "apartmentHouse", position: [16, 0, -72], height: 27, rotationY: -1.1 },
+  { asset: "apartmentHouse", position: [-6, 0, -86], height: 19, rotationY: 2.4 },
+  { asset: "apartmentHouse", position: [38, 0, -95], height: 32, rotationY: 0.8 },
+  { asset: "apartmentHouse", position: [-42, 0, -104], height: 24, rotationY: 1.7 },
 ];
 
 /**
@@ -75,20 +77,41 @@ const SKYLINE: Placement[] = [
  * occluded, and it leans on the untextured model for everything but the two
  * nearest slots, where detail is actually resolvable.
  */
+/* Heights are re-tuned against honest grounding. Before the fix above, every
+   building was sunk to roughly half its nominal height, so these numbers were
+   authored ~2× too large to compensate. Standing them on the ground without
+   re-tuning would have left the tower — 20.7 units — as the *shortest* thing
+   in its own hero shot.
+
+   The rule now: nothing in the near or middle ground exceeds ~16, so the
+   subject is unambiguously the tallest thing in frame; the far skyline is
+   allowed 22–28 because fog and distance already read it as smaller. */
+/* Re-composed once the models stood up.
+ *
+ * Lying on their backs these sprawled across the frame and looked like a lot of
+ * building. Upright and correctly grounded they are far smaller on screen —
+ * `modern_apartment_house` is a squat block, ~32 × 34 in footprint for 26 of
+ * height — so the previous ring, which sat 34 to 104 units out, put them beyond
+ * the point where the eye registers them at all.
+ *
+ * So they come in: the nearest are now inside 30 units, where they read as
+ * buildings rather than as texture, and the far rank is closer to the fog's
+ * `near` of 45 so it stacks up in haze instead of dissolving entirely. Heights
+ * stay under the tower's 20.7 in the near and middle ground — the subject has
+ * to be the tallest thing in its own frame.
+ */
 const SITE_SURROUNDS: Placement[] = [
-  /* Near neighbours, flanking — but set well back. At 14–20 units they filled
-     a third of the frame and read as flat billboards rather than buildings;
-     the tower needs clear air around it to be the subject. */
-  { asset: "cityBlock", position: [-40, 0, -34], height: 18, rotationY: 0.5 },
-  { asset: "apartmentHouse", position: [42, 0, -38], height: 22, rotationY: -0.7 },
+  // Near neighbours, flanking the camera's arc without crossing it.
+  { asset: "cityBlock", position: [-26, 0, -20], height: 12, rotationY: 0.5 },
+  { asset: "apartmentHouse", position: [27, 0, -24], height: 14, rotationY: -0.7 },
   // Middle distance.
-  { asset: "apartmentHouse", position: [-38, 0, -44], height: 29, rotationY: 1.3 },
-  { asset: "apartmentHouse", position: [34, 0, -52], height: 24, rotationY: 2.6 },
-  { asset: "apartmentHouse", position: [-8, 0, -62], height: 33, rotationY: 0.15 },
-  // Far skyline, fading into fog.
-  { asset: "apartmentHouse", position: [52, 0, -78], height: 40, rotationY: 1.9 },
-  { asset: "apartmentHouse", position: [-56, 0, -88], height: 36, rotationY: 0.9 },
-  { asset: "apartmentHouse", position: [14, 0, -98], height: 46, rotationY: 2.2 },
+  { asset: "apartmentHouse", position: [-30, 0, -38], height: 17, rotationY: 1.3 },
+  { asset: "apartmentHouse", position: [30, 0, -44], height: 15, rotationY: 2.6 },
+  { asset: "apartmentHouse", position: [-6, 0, -50], height: 19, rotationY: 0.15 },
+  // Far skyline, stacking up in the haze.
+  { asset: "apartmentHouse", position: [44, 0, -66], height: 26, rotationY: 1.9 },
+  { asset: "apartmentHouse", position: [-48, 0, -74], height: 24, rotationY: 0.9 },
+  { asset: "apartmentHouse", position: [12, 0, -84], height: 30, rotationY: 2.2 },
 ];
 
 export function CitySurrounds({ tier }: { tier: QualityTier }) {
@@ -172,9 +195,27 @@ function AssetGroup({
       const source = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       mesh.material = source.map((m) => {
         const mat = (m as THREE.MeshStandardMaterial).clone();
-        if (mat.color) mat.color.lerp(NIGHT, 0.72);
+        /* 0.45, not the 0.72 this started at.
+           At 0.72 these are pulled to within a few percent of the page ground,
+           and once they were also standing upright — half the silhouette area
+           of the same model lying on its back — they stopped being visible at
+           all. They still must not out-read the tower, but a neighbour the eye
+           cannot find is not context, it is nothing. */
+        if (mat.color) mat.color.lerp(NIGHT, 0.45);
         if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
-        mat.envMapIntensity = 0.35;
+        mat.envMapIntensity = 0.6;
+        /* These are Sketchfab exports, and several of them are modelled as
+           single-sided shells with the normals authored for one hero angle.
+           Seen from any other side — which is every side, once a drone camera
+           orbits past — the near faces cull away and you look straight into a
+           hollow, inside-out box. Rendering both faces costs nothing at this
+           distance and is the difference between "a building" and "the back of
+           a building". */
+        mat.side = THREE.DoubleSide;
+        /* Backface lighting on a double-sided mesh is only correct if the
+           normal is flipped for the far face; without this the interior walls
+           read as flat black holes. */
+        mat.shadowSide = THREE.DoubleSide;
         // Emissive maps on these models are daytime signage; muting them stops
         // random panels glowing brighter than the tower's own lit windows.
         if (mat.emissive) mat.emissive.multiplyScalar(0.25);
@@ -187,22 +228,63 @@ function AssetGroup({
   }, [scene]);
 
   /**
-   * Fit the model to one metre tall, once, so each placement only has to
-   * multiply by the height it wants.
+   * Stand the model up.
    *
-   * Measured from the loaded scene rather than read from the catalogue: the
-   * catalogue records what the file claimed, but node transforms can change the
-   * effective size, and this is the number that is actually true.
+   * **Both GLBs in use are authored Z-up**, and glTF is Y-up, so they were
+   * being rendered lying on their backs. This is measurable, not a guess:
+   * `modern_city_block`'s `terrain_5_0` mesh spans ±198 × ±192 but only ±2.8 in
+   * Z, and its roads and kerb decals sit at z ≈ 0 — the ground plane is XY.
+   * `modern_apartment_house` is the same story: `Box001_14` is a 1118 × 922 × 23
+   * slab with `min.z = 0`, and most of its meshes start at z = 0.
+   *
+   * Sketchfab's exporter normally corrects this with a −90° X matrix on the
+   * `Sketchfab_model` root, and it is present here — but the `.fbx` child node
+   * directly beneath carries the exact inverse, so the two cancel to identity
+   * and the correction never happens.
+   *
+   * That single missing rotation is what "you can see their back side" was:
+   * a city block tipped onto its face, seen from underneath.
+   *
+   * Done as a pivot group rather than by swapping axes by hand so the bounding
+   * box below is measured in the orientation the model is actually drawn in.
    */
-  const unitScale = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(graded);
-    const size = box.getSize(new THREE.Vector3());
-    const tallest = Math.max(size.x, size.y, size.z);
-    return tallest > 0 ? 1 / tallest : 1;
+  const upright = useMemo(() => {
+    const pivot = new THREE.Group();
+    pivot.rotation.x = -Math.PI / 2;
+    pivot.add(graded);
+    pivot.updateMatrixWorld(true);
+    return pivot;
   }, [graded]);
 
-  /** Sink each building slightly so none appears to float on the fog line. */
-  const jitter = useMemo(() => seededRandom(0x5eed), []);
+  /**
+   * Fit the model to one metre tall, and record where its feet are.
+   *
+   * Two things were wrong here, and together they are most of why the skyline
+   * sat badly.
+   *
+   * **The fit used the largest of x/y/z, not the height.** That is only ever
+   * correct for a model that happens to be taller than it is wide, and it is a
+   * coincidence when it holds: `modern_apartment_house` measures
+   * 1280 × 1351 × 1030, so it survived by 5%. Any asset swapped in that is
+   * wider than it is tall would have been scaled by its width and come out
+   * squat. Fit to `size.y`, which is what `height` on a placement actually means.
+   *
+   * **Nothing was grounded.** Both models are modelled about their own centre —
+   * `modern_city_block` runs y −213.8 → +213.8 — so placing them at y = 0 buried
+   * the bottom half of every building in the ground plane and left the visible
+   * part looking half the height it was asked for. The old
+   * `- 0.4 - jitter() * 0.6` sink was compensating in the wrong direction for a
+   * problem two orders of magnitude larger.
+   *
+   * `footY` is the model's own y-minimum in unit-height space, so a placement
+   * lifts by `footY * height` to stand its base exactly on the ground.
+   */
+  const { unitScale, footY } = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(upright);
+    const size = box.getSize(new THREE.Vector3());
+    const scale = size.y > 0 ? 1 / size.y : 1;
+    return { unitScale: scale, footY: -box.min.y * scale };
+  }, [upright]);
 
   return (
     <>
@@ -211,13 +293,20 @@ function AssetGroup({
         return (
           <group
             key={`${assetKey}-${index}`}
-            position={[p.position[0], p.position[1] - 0.4 - jitter() * 0.6, p.position[2]]}
+            position={[
+              p.position[0],
+              // Feet on the ground, then the placement's own offset on top.
+              p.position[1] + footY * p.height,
+              p.position[2],
+            ]}
             rotation={[0, p.rotationY, 0]}
             scale={s}
           >
             {/* drei's Clone shares geometry and materials across instances —
-                `scene.clone()` would deep-copy 24 MB of buffers per placement. */}
-            <Clone object={graded} />
+                `scene.clone()` would deep-copy 24 MB of buffers per placement.
+                Cloning the pivot rather than the raw scene carries the
+                up-axis correction with it. */}
+            <Clone object={upright} />
           </group>
         );
       })}

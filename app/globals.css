@@ -314,6 +314,18 @@
   }
 }
 
+/* A very slow push on the city band, so the still is not dead while the
+   client's own timelapse footage is outstanding. Scale only — panning a
+   `fill` image reveals its edges. */
+@keyframes drift {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
 /* Users who ask for less motion get none of the choreography. */
 @media (prefers-reduced-motion: reduce) {
   html {

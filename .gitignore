@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local ffmpeg build used for frame extraction — 405MB of binaries, never committed.
+/tools/

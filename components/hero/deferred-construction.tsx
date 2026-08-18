@@ -47,12 +47,19 @@ export function DeferredConstruction({
       return;
     }
 
+    /* Reported *now*, not from inside the idle callback below.
+       `onActive` is what tells the hero to drop the photographic backdrop, and
+       deferring it meant the visitor saw a photograph for however long the idle
+       queue took — then a cross-fade to 3D. That flash of an unrelated still is
+       the first thing anyone notices on the page. The decision is already known
+       synchronously here; only the *loading* needs to wait for idle. */
+    onActive(true);
+
     const schedule =
       window.requestIdleCallback ??
       ((cb: IdleRequestCallback) => window.setTimeout(cb, 300));
     const handle = schedule(() => {
       setAllowed(true);
-      onActive(true);
     });
 
     return () => {

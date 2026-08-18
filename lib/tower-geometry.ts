@@ -28,6 +28,39 @@ export const TOWER = {
   core: { w: 1.5, d: 1.4, x: -1.4, z: 0 },
 } as const;
 
+/**
+ * How one storey of facade divides vertically, as fractions of `TOWER.storey`.
+ *
+ * This exists because the first version had none of it: the spandrel and the
+ * glazing were both `TOWER.storey * 0.34` and `* 0.58` tall and both centred on
+ * the same point, so a solid concrete band sat *inside* every window, z-fighting
+ * with it. That single overlap is most of why the facade did not read as a
+ * facade — real cladding is a stack of bands that meet edge to edge, and the eye
+ * reads the horizontal lines between them as floors.
+ *
+ * Bottom to top: spandrel (the solid band you lean on), glazing, then a shadow
+ * gap left for the slab edge to occupy.
+ */
+export const BAND = {
+  spandrel: 0.3,
+  glass: 0.62,
+  /** Remainder, 0.08, is the slab edge. Not modelled — the slab fills it. */
+} as const;
+
+/** Vertical centre of the spandrel band, relative to the storey's centre. */
+export const SPANDREL_OFFSET = (BAND.spandrel - 1) / 2;
+/** Vertical centre of the glazing band, relative to the storey's centre. */
+export const GLASS_OFFSET = BAND.spandrel + BAND.glass / 2 - 0.5;
+
+/** The plinth the tower stands on. Two storeys of lobby, parking and shops. */
+export const PODIUM = {
+  storeys: 2,
+  /** How far the podium oversails the tower footprint on each side. */
+  overhang: 1.5,
+} as const;
+
+export const PODIUM_HEIGHT = PODIUM.storeys * TOWER.storey;
+
 export const FOOTPRINT = {
   width: (TOWER.baysX - 1) * TOWER.spanX,
   depth: (TOWER.baysZ - 1) * TOWER.spanZ,
@@ -84,7 +117,9 @@ export function facadePlacements(): Placement[] {
   const halfW = FOOTPRINT.width / 2;
   const halfD = FOOTPRINT.depth / 2;
 
-  for (let floor = 0; floor < TOWER.floors; floor++) {
+  // Starts above the podium: floors 0–1 are inside it, and glazing them would
+  // put windows behind a solid mass.
+  for (let floor = PODIUM.storeys; floor < TOWER.floors; floor++) {
     const y = floor * TOWER.storey + TOWER.storey / 2;
 
     // Long faces, front and back.
@@ -101,6 +136,59 @@ export function facadePlacements(): Placement[] {
     }
   }
   return out;
+}
+
+/**
+ * The floor at which the tower's own cladding starts.
+ *
+ * Floors 0 and 1 are inside the podium, so glazing them would put windows
+ * behind a solid mass. The frame still builds through them — that is a real
+ * part of watching a building go up — but the skin starts where the tower
+ * actually becomes visible.
+ */
+export const FIRST_CLAD_FLOOR = PODIUM.storeys;
+
+/**
+ * Balconies on the main elevation.
+ *
+ * The single largest change in whether this reads as *housing* rather than as
+ * an office block or an abstract massing study. A curtain wall says commercial;
+ * a stacked ribbon of projecting trays with railings says people live here, and
+ * that is the entire proposition of the page it sits on.
+ *
+ * The front face carries a full ribbon and the rear only its outer bays, so the
+ * two elevations are not the same building mirrored.
+ */
+export function balconyPlacements(): Placement[] {
+  const out: Placement[] = [];
+  const halfD = FOOTPRINT.depth / 2;
+
+  for (let floor = FIRST_CLAD_FLOOR; floor < TOWER.floors; floor++) {
+    const y = floor * TOWER.storey + TOWER.storey / 2;
+    for (let ix = 0; ix < TOWER.baysX - 1; ix++) {
+      const x = (ix - (TOWER.baysX - 2) / 2) * TOWER.spanX;
+      out.push({ position: [x, y, halfD], rotationY: 0, floor });
+      // Rear: outer bays only.
+      if (ix === 0 || ix === TOWER.baysX - 2) {
+        out.push({ position: [x, y, -halfD], rotationY: Math.PI, floor });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * One vertical mullion per bay, centred on the panel.
+ *
+ * Placed at the *centre* of each bay rather than at its edges on purpose: edge
+ * mullions are shared between neighbouring bays, so instancing them produces
+ * two coincident fins at every joint and a z-fighting seam down the whole
+ * elevation. A single central fin splits each bay into a pair of windows, which
+ * is both what a real facade does at this span and the version that cannot
+ * double up.
+ */
+export function mullionPlacements(): Placement[] {
+  return facadePlacements();
 }
 
 /** Pile caps under the column grid, the first thing to appear. */

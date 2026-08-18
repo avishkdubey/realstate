@@ -1,6 +1,16 @@
 import Link from "next/link";
 
 import { HomeHero } from "@/components/hero/home-hero";
+import { ChannelConnect } from "@/components/home/channel-connect";
+import { CityTourSection } from "@/components/home/city-tour-section";
+import { CityTimelapse } from "@/components/home/city-timelapse";
+import { ClosingCta } from "@/components/home/closing-cta";
+import { Favourites } from "@/components/home/favourites";
+import { NriInvest } from "@/components/home/nri-invest";
+import { Priorities } from "@/components/home/priorities";
+import { RentOrBuy } from "@/components/home/rent-or-buy";
+import { Stories } from "@/components/home/stories";
+import { WhatWeBuild } from "@/components/home/what-we-build";
 import { LocationMap } from "@/components/locations/location-map";
 import { FadeInView } from "@/components/motion/fade-in-view";
 import { RevealLine, ScrollReveal } from "@/components/motion/scroll-reveal";
@@ -42,6 +52,16 @@ export default async function HomePage() {
     ...projects.filter((p) => p.status === "upcoming"),
   ].slice(0, 3);
 
+  /* The "favourites" rail. Anything a buyer can act on today, ongoing first,
+     then upcoming, then the delivered work that proves the record. Deliberately
+     a wider set than `featured` — a carousel with three items in it does not
+     look hand-picked, it looks like everything we have. */
+  const favourites = [
+    ...projects.filter((p) => p.status === "ongoing"),
+    ...projects.filter((p) => p.status === "upcoming"),
+    ...projects.filter((p) => p.status === "completed"),
+  ].slice(0, 8);
+
   // The client's own published figures. Confirm before launch — an
   // overstated delivery record is a §12 exposure, not a flourish.
   const { stats } = siteConfig;
@@ -70,6 +90,11 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* The neighbourhood, in 3D. Sits directly after the hero because the
+          hero raises exactly the question it answers: the tower goes up, and
+          then — what is around it? */}
+      <CityTourSection />
 
       {/* Featured work. Ongoing first — that is what a buyer can act on. */}
       <section className="section">
@@ -102,6 +127,12 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <WhatWeBuild />
+
+      <Favourites projects={favourites} />
+
+      <Priorities />
+
       {/* What buyers actually screen on: transparency, not adjectives. */}
       <section className="section bg-surface-2">
         <div className="container-page grid gap-16 lg:grid-cols-[1fr_1.2fr]">
@@ -122,6 +153,13 @@ export default async function HomePage() {
           </FadeInView>
         </div>
       </section>
+
+      <RentOrBuy />
+
+      {/* The city itself, full bleed. Sits between the arithmetic and the map
+          as a deliberate breath — two dense sections back to back is where a
+          long page starts to feel like work. */}
+      <CityTimelapse />
 
       {/* Micro-market teaser */}
       <section className="section">
@@ -148,34 +186,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* NRI strip */}
-      <section className="bg-surface-3 border-y border-hairline">
-        <div className="container-page grid gap-10 py-20 lg:grid-cols-[1.2fr_1fr] lg:items-center">
-          <div>
-            <p className="eyebrow text-gold-soft">Buying from abroad</p>
-            <h2 className="measure mt-6 text-h4">
-              A good share of our buyers have never stood in the building.
-            </h2>
-            <p className="measure text-stone-2 mt-4">
-              Power of attorney, NRE and NRO accounts, FEMA, remote booking and
-              callbacks in your timezone — written down rather than explained on
-              a call.
-            </p>
-          </div>
-          <div className="lg:justify-self-end">
-            <Link
-              href="/nri-corner"
-              className="eyebrow bg-gold text-charcoal inline-block rounded-sm px-8 py-4"
-            >
-              NRI Corner
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Buyer stories. Everything in the rail is written placeholder content
+          and says so on screen — see `lib/placeholders/stories.ts`. */}
+      <Stories />
 
-      {/* Testimonials — renders only when the client supplies real, attributed
-          quotes. Inventing customer reviews for a live builder is not an
-          option, so an empty list simply hides the section. */}
+      {/* The client's own testimonial list is still deliberately empty, so this
+          renders nothing until real attributed quotes arrive. It is kept
+          alongside `<Stories />` so that switching from sample to real content
+          is a data change, not a layout rewrite. */}
       {testimonials.length > 0 && (
         <section className="section">
           <div className="container-page">
@@ -186,6 +204,8 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      <NriInvest />
 
       {/* Insights teaser */}
       {latestPosts.length > 0 && (
@@ -222,6 +242,10 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      <ChannelConnect />
+
+      <ClosingCta />
 
       <section className="section">
         <div className="container-page">
