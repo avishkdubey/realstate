@@ -236,33 +236,22 @@ function AssetGroup({
   }, [scene]);
 
   /**
-   * Stand the model up.
+   * No up-axis correction, deliberately. **Do not add one.**
    *
-   * **Both GLBs in use are authored Z-up**, and glTF is Y-up, so they were
-   * being rendered lying on their backs. This is measurable, not a guess:
-   * `modern_city_block`'s `terrain_5_0` mesh spans ±198 × ±192 but only ±2.8 in
-   * Z, and its roads and kerb decals sit at z ≈ 0 — the ground plane is XY.
-   * `modern_apartment_house` is the same story: `Box001_14` is a 1118 × 922 × 23
-   * slab with `min.z = 0`, and most of its meshes start at z = 0.
+   * These models arrive correctly Y-up. Verified by transforming every
+   * primitive's bounding box through its full node chain: `modern_city_block`'s
+   * `roads_5_0` is flat in Y and sits at the bottom of the model's world
+   * bounds, and `modern_apartment_house`'s world `min.y` is exactly 0.
    *
-   * Sketchfab's exporter normally corrects this with a −90° X matrix on the
-   * `Sketchfab_model` root, and it is present here — but the `.fbx` child node
-   * directly beneath carries the exact inverse, so the two cancel to identity
-   * and the correction never happens.
+   * A −90° X rotation lived here briefly, on the mistaken reading that the
+   * files were Z-up, and it turned every building upside down. The error was
+   * concluding an up-axis from raw accessor `min`/`max`, which are local to
+   * each primitive and say nothing about where its node chain puts it.
    *
-   * That single missing rotation is what "you can see their back side" was:
-   * a city block tipped onto its face, seen from underneath.
-   *
-   * Done as a pivot group rather than by swapping axes by hand so the bounding
-   * box below is measured in the orientation the model is actually drawn in.
+   * See `use-upright-model.ts` for the same note and how to test properly if an
+   * asset is ever swapped.
    */
-  const upright = useMemo(() => {
-    const pivot = new THREE.Group();
-    pivot.rotation.x = -Math.PI / 2;
-    pivot.add(graded);
-    pivot.updateMatrixWorld(true);
-    return pivot;
-  }, [graded]);
+  const upright = graded;
 
   /**
    * Fit the model to one metre tall, and record where its feet are.

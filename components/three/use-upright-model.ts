@@ -13,12 +13,23 @@ import { COLORS } from "@/lib/three-palette";
  * and getting any one of them wrong is invisible in code and glaring on screen.
  * They are collected here so a scene author never has to remember them.
  *
- * **Up-axis.** Both models in use are authored Z-up while glTF is Y-up, so
- * without a correction they render lying on their backs. Sketchfab's exporter
- * writes a −90° X matrix onto the `Sketchfab_model` root to fix exactly this,
- * but in these files the `.fbx` node directly beneath carries the inverse and
- * the two cancel out. See `city-backdrop.tsx` for the measurements that
- * establish it.
+ * **Up-axis: none needed. Do not add one.** Both models arrive correctly Y-up
+ * and this was verified by transforming every primitive's bounding box through
+ * its full node chain: `modern_city_block`'s `roads_5_0` mesh is flat in Y and
+ * sits at the bottom of the model's world bounds, and
+ * `modern_apartment_house`'s world `min.y` is exactly 0 — already standing on
+ * the ground.
+ *
+ * A −90° X correction was applied here at one point, on the theory that the
+ * files were Z-up. They are not, and it turned every building upside down. The
+ * mistake came from reading raw accessor `min`/`max` — which are *local* to
+ * each primitive, before its node transforms — and concluding from a
+ * flat-in-Z terrain mesh that the ground plane was XY. It is only XY in that
+ * mesh's own local space; the node chain above it rotates it into place.
+ *
+ * If a future asset genuinely is Z-up, correct it with a pivot group here and
+ * measure the bounding box *after* the pivot — but confirm it first by
+ * transforming the corners through the node chain, not by reading accessors.
  *
  * **Grading.** `useGLTF` caches the loaded scene globally, so any material
  * change has to happen on a clone or it silently re-grades every other use of
@@ -82,13 +93,10 @@ export function useUprightModel(
     return copy;
   }, [scene, nightMix, envMapIntensity, emissiveScale]);
 
-  const upright = useMemo(() => {
-    const pivot = new THREE.Group();
-    pivot.rotation.x = -Math.PI / 2;
-    pivot.add(graded);
-    pivot.updateMatrixWorld(true);
-    return pivot;
-  }, [graded]);
+  /* No transform of our own — see the up-axis note above. Kept as a named
+     binding so the measurement below and every call site refer to one object,
+     and so a genuine correction has an obvious place to live. */
+  const upright = graded;
 
   const measured = useMemo(() => {
     const box = new THREE.Box3().setFromObject(upright);

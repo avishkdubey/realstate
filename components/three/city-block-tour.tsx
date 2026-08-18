@@ -48,19 +48,22 @@ const ROUTE: {
   position: [number, number, number];
   target: [number, number, number];
 }[] = [
-  /* Distances were roughly halved after the first pass. At 2.6 heights out the
-     block — which is ~3.6 × 3.9 its own height in footprint — sat small and
-     centred with a lot of empty sky above it, which is what a diagram looks
-     like. Coming in fills the frame and lets the individual buildings resolve,
-     which is the entire reason for using this asset rather than a photograph. */
-  // 1. Establishing. High and wide, but close enough to read.
-  { at: 0.0, position: [1.7, 1.15, 2.2], target: [0, 0.3, 0] },
+  /* Distances are set against the block's *measured* proportions, not guessed
+     ones. Transformed through its node chain it is roughly 4.7 × 4.6 its own
+     height in footprint — a wide, low district rather than the compact cluster
+     earlier versions of this route assumed. At 38° fov the horizontal field is
+     about 0.99 × distance, so holding an 84-unit width needs ~6 heights of
+     standoff; the previous 1.7 put the camera inside the footprint radius and
+     cropped whole buildings off the right edge. */
+  // 1. Establishing. The whole district, from a drone.
+  { at: 0.0, position: [3.6, 2.6, 4.4], target: [0, 0.15, 0] },
   // 2. Descent. Rooftops resolving.
-  { at: 0.34, position: [1.05, 0.72, 1.35], target: [0.1, 0.32, 0] },
-  // 3. Street level. Inside the block, looking along it.
-  { at: 0.68, position: [0.34, 0.22, 0.6], target: [-0.2, 0.4, -0.35] },
+  { at: 0.34, position: [2.0, 1.35, 2.5], target: [0.1, 0.2, 0] },
+  // 3. Street level. Genuinely inside the block — the footprint radius is
+  //    ~2.3 heights, so at 1.0 out the camera is between the buildings.
+  { at: 0.68, position: [0.5, 0.25, 0.8], target: [-0.3, 0.35, -0.5] },
   // 4. Lift out. Pulls back to a composed three-quarter view.
-  { at: 1.0, position: [-1.35, 0.95, 1.75], target: [0, 0.32, 0] },
+  { at: 1.0, position: [-2.8, 1.9, 3.6], target: [0, 0.2, 0] },
 ];
 
 function sampleRoute(
