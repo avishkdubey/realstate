@@ -9,39 +9,42 @@ import { useScrollProgress } from "@/components/three/use-scroll-progress";
 import { clamp01, smoothstep } from "@/lib/construction-stages";
 
 /**
- * "What we build for you" — six full-bleed panels that slide up and stack.
+ * "What we build for you" — six landscape cards dealt onto a 3D stack.
  *
- * Each category rises from the bottom of the viewport and comes to rest over
- * the one before it, which sinks back very slightly and dims. That parallax
- * between the arriving panel and the departing one is the whole effect: without
- * it the panels read as a slideshow, with it they read as depth.
+ * Each card rises from below the fold, tilted forward, and lands flat on the
+ * deck. The cards already there are pushed back in Z and nudged up, so their
+ * top edges stay visible behind the current one — the section reads as a
+ * physical stack being dealt rather than as a slideshow.
  *
- * Everything animated here is `transform` and `opacity`, written straight to
- * the nodes from one rAF loop — never through React state. Six full-screen
- * panels re-rendering on every frame of a scroll would be the most expensive
- * thing on the page by a wide margin (`CLAUDE.md` §6: composite properties
- * only).
+ * The 3D is real perspective, not a fake: the stage carries
+ * `perspective: 1600px` and every card is transformed on the Z axis, so the
+ * foreshortening between the front card and the one three back is computed by
+ * the compositor. `rotateX` on the arriving card is what sells it — a card that
+ * slides up without tilting reads as flat no matter what else is happening.
  *
- * Narrow viewports and `prefers-reduced-motion` get the same six panels as an
- * ordinary vertical stack. That is not a lesser version — hijacking scroll on a
- * phone to drive a pinned sequence is worse than the plain document flow it
- * replaces, and it costs nothing to skip on the devices least able to afford it.
+ * Everything animated is `transform` and `opacity`, written straight to the
+ * nodes from a single rAF loop, never through React state. Six cards
+ * re-rendering on every frame of a scroll would be the most expensive thing on
+ * the page (`CLAUDE.md` §6: composite properties only).
+ *
+ * Narrow viewports and `prefers-reduced-motion` get the same six as a plain
+ * vertical list. Hijacking scroll on a phone to drive a pinned sequence is
+ * worse than the document flow it replaces.
  *
  * ── IMAGERY ────────────────────────────────────────────────────────────────
- * Every `image` below is a **stand-in taken from the client's own existing
- * project photography**, chosen for resolution rather than subject — the villa
- * panel is not a villa, and the plots panel is an aerial of a completed
- * scheme.
+ * `villas` and `weekend-homes` are Pexels photographs. The Pexels licence
+ * permits commercial use and modification and requires no attribution, which
+ * is why they are usable here at all — an image lifted from a search result is
+ * a copyright exposure on a live builder's site.
  *
- * They are deliberately not stock or web images. `CLAUDE.md` §6 rules out
- * "cheap staged stock" on craft grounds, but the binding reason is legal: this
- * is a live builder's marketing site, so an image lifted from a search result
- * is a copyright exposure, and under RERA §12 a photograph that implies the
- * promoter built something they did not is a misleading statement they are
- * liable for — a disclaimer does not waive it.
+ * The remaining four are stand-ins from the client's own project photography.
+ * **None of these six is a Kautilya villa or weekend home**, which is why the
+ * section carries a representational-purpose line: under RERA §12 a photograph
+ * implying the promoter built something they did not is a misleading statement
+ * they are liable for, and a disclaimer does not waive that — it only stops the
+ * page asserting something untrue in the first place.
  *
- * To swap: drop six images into `public/images/categories/` and change the one
- * `image` field on each entry. Nothing else needs to move.
+ * To swap: replace the file at the `image` path. Nothing else moves.
  * ───────────────────────────────────────────────────────────────────────────
  */
 
@@ -69,7 +72,7 @@ const PANELS: Panel[] = [
     title: "Villas",
     tagline: "Private sanctuaries, crafted for you",
     body: "Ground-plus-one living with your own garden, your own gate and no shared wall — planned for joint families who want proximity without compromise.",
-    image: "/images/projects/day-corner-new.webp",
+    image: "/images/categories/villas.webp",
     href: "/projects",
   },
   {
@@ -93,7 +96,7 @@ const PANELS: Panel[] = [
     title: "Weekend Homes",
     tagline: "Your escape, closer than you think",
     body: "An hour out, on land with water and old trees, built to be shut up on a Sunday evening and opened again on a Friday without a caretaker's list of repairs.",
-    image: "/images/projects/nilay-balcony.webp",
+    image: "/images/categories/weekend-homes.webp",
     href: "/projects",
   },
   {
@@ -106,19 +109,26 @@ const PANELS: Panel[] = [
   },
 ];
 
-/** How far a covered panel sinks back, and how far it dims. */
-const SINK = 0.07;
-const DIM = 0.6;
+/** How the deck behaves. Tuned against a 1600px perspective. */
+const DECK = {
+  /** How far back each covered card is pushed, in px of Z. */
+  depth: 110,
+  /** How far each covered card peeks up, as a % of card height. */
+  peek: 5,
+  /** Forward tilt of a card still on its way in, in degrees. */
+  tilt: 11,
+  /** How many cards stay in the stack behind the front one. */
+  visibleBehind: 3,
+  /** Dimming applied per step back. */
+  dim: 0.26,
+};
 
 export function WhatWeBuild() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const progress = useScrollProgress(sectionRef);
   const reducedMotion = useReducedMotionPreference();
 
-  /* Element refs, one per panel. `slide` moves the whole panel up; `inner`
-     carries the sink so the two transforms never fight for one node. */
-  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const innerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const shadeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const counterRef = useRef<HTMLSpanElement | null>(null);
 
@@ -148,30 +158,33 @@ export function WhatWeBuild() {
       if (Math.abs(p - painted) < 0.0004) return;
       painted = p;
 
-      // Position along the deck, in panels: 0 → the first, `steps` → the last.
+      // Position along the deck, in cards: 0 → the first, `steps` → the last.
       const seg = p * steps;
 
       for (let i = 0; i < PANELS.length; i++) {
-        // How far panel `i` has slid in. The first panel is always in place.
+        const card = cardRefs.current[i];
+        if (!card) continue;
+
+        // How far this card has been dealt in. The first is always down.
         const arrive = i === 0 ? 1 : smoothstep(clamp01(seg - (i - 1)));
-        // How far panel `i` has been covered by the one after it.
-        const covered = i === PANELS.length - 1 ? 0 : smoothstep(clamp01(seg - i));
+        // How many cards have landed on top of it, as a continuous value.
+        const behind = Math.min(Math.max(seg - i, 0), DECK.visibleBehind);
 
-        const slide = slideRefs.current[i];
-        if (slide) {
-          slide.style.transform = `translate3d(0, ${(1 - arrive) * 100}%, 0)`;
-          /* Panels still fully below the fold are taken out of paint entirely.
-             Six stacked full-screen images with blurred edges is real
-             compositing work on an integrated GPU, and only two are ever
-             visible at once. */
-          slide.style.visibility = arrive <= 0 ? "hidden" : "visible";
-        }
+        const enterY = (1 - arrive) * 118;
+        const stackY = -behind * DECK.peek;
+        const z = -behind * DECK.depth;
+        const tilt = (1 - arrive) * DECK.tilt;
 
-        const inner = innerRefs.current[i];
-        if (inner) inner.style.transform = `scale(${1 - SINK * covered})`;
+        card.style.transform = `translate3d(0, ${enterY + stackY}%, ${z}px) rotateX(${tilt}deg)`;
+
+        /* Cards still below the fold, and cards buried past the back of the
+           stack, are taken out of paint entirely — six full-size images with
+           blurred edges is real compositing work on an integrated GPU. */
+        card.style.visibility =
+          arrive <= 0 || seg - i > DECK.visibleBehind + 0.25 ? "hidden" : "visible";
 
         const shade = shadeRefs.current[i];
-        if (shade) shade.style.opacity = String(DIM * covered);
+        if (shade) shade.style.opacity = String(Math.min(behind * DECK.dim, 0.8));
       }
 
       if (counterRef.current) {
@@ -195,21 +208,13 @@ export function WhatWeBuild() {
    * registers `sectionRef.current` from an effect keyed on the ref *object*,
    * which is stable, so that effect runs once, finds `null`, and never runs
    * again when `pinned` flips. The scroll position would then read 0 forever
-   * and every panel would sit at `translateY(100%)`, invisible — which is
-   * exactly what it did.
-   *
-   * Keeping the element type and position identical across the flip lets React
-   * reuse the same DOM node, so the registration made on the first render stays
-   * valid for the pinned one.
-   *
-   * Six panels: one at rest plus five transitions, at roughly 70svh of scroll
-   * each. Long enough that a panel is readable before the next arrives, short
-   * enough that it never feels like being held hostage.
+   * and every card would sit below the fold, invisible — which is exactly what
+   * it did the first time.
    */
   return (
     <section
       ref={sectionRef}
-      className={pinned ? "relative h-[440svh]" : "section"}
+      className={pinned ? "bg-surface-1 relative h-[440svh]" : "section"}
       aria-labelledby="what-we-build-heading"
     >
       {!pinned ? (
@@ -228,80 +233,110 @@ export function WhatWeBuild() {
               </li>
             ))}
           </ul>
+
+          <p className="container-page text-caption text-muted-foreground mt-10">
+            Images are representative only and do not depict a specific project.
+          </p>
         </>
       ) : (
         <div className="sticky top-0 h-svh w-full overflow-hidden">
-        {PANELS.map((panel, i) => (
-          <div
-            key={panel.title}
-            ref={(node) => void (slideRefs.current[i] = node)}
-            className="absolute inset-0 will-change-transform"
-            style={{
-              zIndex: i,
-              // Pre-positioned so the first paint matches frame one of the loop.
-              transform: i === 0 ? undefined : "translate3d(0, 100%, 0)",
-              visibility: i === 0 ? "visible" : "hidden",
-            }}
-          >
-            <div
-              ref={(node) => void (innerRefs.current[i] = node)}
-              className="relative h-full w-full origin-center will-change-transform"
-            >
-              <Image
-                src={panel.image}
-                alt=""
-                aria-hidden
-                fill
-                sizes="100vw"
-                className="object-cover"
-              />
-              {/* Panel scrim, so the copy holds over any photograph. */}
-              <div
-                aria-hidden
-                className="from-surface-0 via-surface-0/55 absolute inset-0 bg-gradient-to-t to-transparent"
-              />
-              {/* The dimmer, driven as this panel is covered. */}
-              <div
-                ref={(node) => void (shadeRefs.current[i] = node)}
-                aria-hidden
-                className="bg-surface-0 absolute inset-0 opacity-0"
-              />
-
-              <div className="relative flex h-full items-end">
-                <div className="container-page pb-[12vh]">
-                  <p className="eyebrow text-gold-soft">{panel.tagline}</p>
-                  <h3 className="text-ivory mt-5 max-w-[14ch] text-h3 leading-[1.05] md:text-h2">
-                    {panel.title}
-                  </h3>
-                  <p className="measure text-ivory/70 mt-6">{panel.body}</p>
-                  <Link
-                    href={panel.href}
-                    className="eyebrow text-ivory mt-9 inline-block border-b border-current pb-1"
-                  >
-                    See these projects
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-          {/* Top scrim, under the heading layer and over every panel.
-              Each panel's own scrim runs bottom-up for its copy, which leaves
-              the top of the frame bare — and against a bright sky the fixed
-              heading and counter simply vanished. This is the one gradient that
-              cannot live on a panel, because it has to cover whichever panel
-              happens to be arriving. */}
+          {/* A little depth behind the deck, so the cards sit in a space
+              rather than on a flat panel. */}
           <div
             aria-hidden
-            className="from-surface-0/80 pointer-events-none absolute inset-x-0 top-0 z-40 h-56 bg-gradient-to-b to-transparent"
+            className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_35%,#1b1b1b_0%,#141414_55%,#0d0d0d_100%)]"
           />
 
+          {/* The stage. `perspective` here is what makes the Z translations on
+              the cards foreshorten; without it they would merely scale. */}
+          <div
+            className="absolute inset-0 flex items-center justify-center pt-[7vh]"
+            style={{ perspective: "1600px", perspectiveOrigin: "50% 45%" }}
+          >
+            {/* Sized from HEIGHT, not width, with the width following from the
+                aspect ratio.
+
+                Driving it from width put a 1120px card at 630px tall, which on
+                a 674px-high window left the card's own copy hanging off the
+                bottom of the screen. A landscape card has to fit the short axis
+                first; the long axis has room to spare on any desktop. */}
+            <div
+              className="relative"
+              style={{
+                transformStyle: "preserve-3d",
+                height: "min(58svh, 620px)",
+                aspectRatio: "16 / 9",
+                maxWidth: "88vw",
+              }}
+            >
+              {/* Reserves the deck's box, so the absolutely positioned cards
+                  have something to sit in and the layout never depends on them. */}
+              <div className="h-full w-full" aria-hidden />
+
+              {PANELS.map((panel, i) => (
+                <div
+                  key={panel.title}
+                  ref={(node) => void (cardRefs.current[i] = node)}
+                  className="absolute inset-0 will-change-transform"
+                  style={{
+                    zIndex: i,
+                    transformOrigin: "50% 100%",
+                    // Pre-positioned so the first paint matches frame one.
+                    transform:
+                      i === 0
+                        ? undefined
+                        : `translate3d(0, 118%, 0) rotateX(${DECK.tilt}deg)`,
+                    visibility: i === 0 ? "visible" : "hidden",
+                  }}
+                >
+                  <div className="border-hairline relative h-full w-full overflow-hidden rounded-md border shadow-[0_40px_80px_-20px_rgba(0,0,0,0.85)]">
+                    <Image
+                      src={panel.image}
+                      alt=""
+                      aria-hidden
+                      fill
+                      sizes="(min-width: 1200px) 1120px, 88vw"
+                      className="object-cover"
+                    />
+                    {/* Card scrim, so the copy holds over any photograph. */}
+                    <div
+                      aria-hidden
+                      className="from-surface-0 via-surface-0/60 absolute inset-0 bg-gradient-to-t to-transparent"
+                    />
+                    {/* The dimmer, driven as this card is covered. */}
+                    <div
+                      ref={(node) => void (shadeRefs.current[i] = node)}
+                      aria-hidden
+                      className="bg-surface-0 absolute inset-0 opacity-0"
+                    />
+
+                    <div className="relative flex h-full items-end">
+                      <div className="p-7 md:p-10">
+                        <p className="eyebrow text-gold-soft">{panel.tagline}</p>
+                        <h3 className="text-ivory mt-3 max-w-[16ch] text-h4 leading-[1.06]">
+                          {panel.title}
+                        </h3>
+                        <p className="measure text-small text-ivory/70 mt-3">
+                          {panel.body}
+                        </p>
+                        <Link
+                          href={panel.href}
+                          className="eyebrow text-ivory mt-5 inline-block border-b border-current pb-1"
+                        >
+                          See these projects
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Heading and counter ride above the deck and never move. Pushed
-              clear of the site header, which is fixed and would otherwise sit
-              on top of the counter. */}
+              clear of the site header, which is fixed. */}
           <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
-            <div className="container-page flex items-start justify-between pt-[16vh]">
+            <div className="container-page flex items-start justify-between pt-[14vh]">
               <div>
                 <p className="eyebrow text-gold-soft">What we build</p>
                 <h2
@@ -311,9 +346,7 @@ export function WhatWeBuild() {
                   What we build for you.
                 </h2>
               </div>
-              {/* Bright enough to read against a sunlit photograph — at
-                  ivory/50 it disappeared into the render behind it. */}
-              <p className="eyebrow text-ivory/80 tabular-nums drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
+              <p className="eyebrow text-ivory/80 tabular-nums">
                 <span ref={counterRef}>01</span>
                 <span className="text-ivory/45">
                   {" "}
@@ -322,6 +355,10 @@ export function WhatWeBuild() {
               </p>
             </div>
           </div>
+
+          <p className="text-ivory/35 absolute inset-x-0 bottom-6 text-center text-[0.6875rem] tracking-wide">
+            Images are representative only and do not depict a specific project.
+          </p>
         </div>
       )}
     </section>
@@ -331,7 +368,7 @@ export function WhatWeBuild() {
 /** The stacked-list rendering, used on narrow viewports and for reduced motion. */
 function PanelCard({ panel }: { panel: Panel }) {
   return (
-    <article className="border-border bg-surface-1 border">
+    <article className="border-border bg-surface-1 overflow-hidden rounded-md border">
       <div className="relative aspect-16/9 overflow-hidden">
         <Image
           src={panel.image}
