@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
+import { StoryVideos } from "@/components/home/story-videos";
 import { SAMPLE, stories, type Story } from "@/lib/placeholders/stories";
 
 /**
@@ -98,6 +99,11 @@ export function Stories() {
             ))}
           </div>
         </div>
+
+        {/* The client's own films, kept below the written rail and labelled as
+            coming from their channel rather than as filmed testimony — see
+            `lib/channel-videos.ts` for why that distinction is load-bearing. */}
+        <StoryVideos />
       </div>
     </section>
   );
