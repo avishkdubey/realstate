@@ -5,11 +5,10 @@ import { useEffect, useRef, type RefObject } from "react";
 /**
  * How far a tall section has travelled through the viewport, as 0→1.
  *
- * The maths and the sampling strategy are lifted from `scroll-frame-sequence.tsx`,
- * which worked them out first and documents why: progress is read inside a
- * requestAnimationFrame loop rather than from a scroll listener, so it stays in
- * step with Lenis — which drives scrolling from its own loop and would otherwise
- * be a frame ahead of anything listening to the native event.
+ * Progress is read inside a requestAnimationFrame loop rather than from a scroll
+ * listener, so it stays in step with Lenis — which drives scrolling from its own
+ * loop and would otherwise be a frame ahead of anything listening to the native
+ * event.
  *
  * Returns a **ref, not state**. Scrolling must never re-render React; the
  * consumer is a `useFrame` callback that reads `.current` on the same frame it

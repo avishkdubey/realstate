@@ -9,14 +9,16 @@ import { useScrollProgress } from "@/components/three/use-scroll-progress";
 /**
  * Mounts the city-block tour against the scroll of its own section.
  *
- * Same split as `construction-canvas.tsx`: the progress hook measures a DOM
- * element, the scene lives inside a `<Canvas>`, so one component owns the div
- * and another owns the R3F tree.
+ * The progress hook measures a DOM element while the scene has to live inside a
+ * `<Canvas>`, so one component owns the div and another owns the R3F tree.
  */
 export function CityTour({
   sectionRef,
+  onReady,
 }: {
   sectionRef: RefObject<HTMLElement | null>;
+  /** Forwarded to the scene; fires once the 24 MB model has actually loaded. */
+  onReady?: () => void;
 }) {
   const progress = useScrollProgress(sectionRef);
 
@@ -35,7 +37,9 @@ export function CityTour({
         fog={{ near: 70, far: 200 }}
         effects={(tier) => <HouseGrade tier={tier} />}
       >
-        {(tier) => <CityBlockTour progress={progress} tier={tier} />}
+        {(tier) => (
+          <CityBlockTour progress={progress} tier={tier} onReady={onReady} />
+        )}
       </SceneFrame>
     </div>
   );

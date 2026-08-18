@@ -49,8 +49,13 @@ export function CityTourSection() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
+        /* Only start loading. `sceneActive` — which is what takes the
+           photograph away — is now set by the scene itself once the model has
+           arrived. Setting both here meant the still vanished the instant the
+           observer fired while 24 MB was still in flight, and the section sat
+           empty and dark for as long as that took. It read as "the 3D model has
+           disappeared", which is exactly what it looked like. */
         setAllowed(true);
-        setSceneActive(true);
         observer.disconnect();
       },
       { rootMargin: "200% 0px" },
@@ -82,8 +87,20 @@ export function CityTourSection() {
 
         {allowed && (
           <WebGLBoundary fallback={<FallbackSignal onMount={() => setSceneActive(false)} />}>
-            <CityTour sectionRef={sectionRef} />
+            <CityTour
+              sectionRef={sectionRef}
+              onReady={() => setSceneActive(true)}
+            />
           </WebGLBoundary>
+        )}
+
+        {/* Loading note. The model is 24 MB — on a slow connection that is a
+            long, silent wait, and silence is what makes people think something
+            is broken. Shown only while the fetch is genuinely in flight. */}
+        {allowed && !sceneActive && (
+          <p className="eyebrow text-ivory/45 absolute top-6 right-6 animate-pulse">
+            Loading the model
+          </p>
         )}
 
         {/* Scrim.

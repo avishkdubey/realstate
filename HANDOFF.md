@@ -182,33 +182,44 @@ about this collision and it was never fixed).
 - `lib/three-palette.ts` — the scene palette in one place, replacing hardcoded
   hexes that had drifted between scenes.
 
-### Phase 3 — construction hero (complete, verified visually)
+### Phase 3 — the hero (REMOVED; now a photograph)
 
-Files: `lib/tower-geometry.ts`, `lib/construction-stages.ts`,
-`components/three/tower-construction.tsx`, `components/hero/construction-canvas.tsx`,
-`components/hero/deferred-construction.tsx`, and edits to
-`components/hero/home-hero.tsx` + `scroll-frame-sequence.tsx`.
+**Deleted, and deliberately not to be resurrected without a reason.** The hero
+went through three iterations — a 36-frame scroll-scrubbed photo sequence, then
+a procedural 18-storey tower assembling itself from pillars to lit windows, then
+a low-poly night-skyline GLB — and now renders a single 379 KB WebP in
+`components/hero/home-hero.tsx`.
 
-~1,300 instances across seven `InstancedMesh`es ≈ ten draw calls, plus a tower
-crane. `STAGE_FILL` was hoisted out of `progress-timeline.tsx` into
-`lib/construction-stages.ts` so the hero and the project timeline share one
-scale.
+Gone with it: `lib/tower-geometry.ts`, `components/three/tower-construction.tsx`,
+`components/hero/construction-canvas.tsx`,
+`components/hero/deferred-construction.tsx`,
+`components/hero/scroll-frame-sequence.tsx`, `public/frames/hero/`, the
+frame-extraction scripts, and `CitySurrounds` from `city-backdrop.tsx`
+(`CityBackdrop` stays — the apartment walkthrough uses it). `STAGE_WINDOWS`,
+`stageAt`, `stageProgress` and `staggeredReveal` went from
+`lib/construction-stages.ts`, which now keeps only what the progress timeline and
+the city-block tour call.
 
-**Three bugs fixed here that would be easy to reintroduce:**
+The reason is worth recording, because the tower was good work. A Chrome audit
+found the hero rendered **nothing at all for 5–10 seconds** on a cold load: the
+Three.js chunk, then a 24 MB GLB, then the scene, with an LCP element that only
+existed once all three had landed. A photograph is painted from the first frame
+of HTML, has no capability gate and no GL context to lose. If a 3D hero ever
+returns, that is the bar it has to clear.
 
-1. **Camera and geometry are on different clocks.** Scroll 0→1 maps onto stage
-   `0.34→1` (starting at the pillars, because excavation draws nothing). The
-   camera route must be sampled with **raw scroll**, not the remapped value —
-   getting this wrong put the camera at its floor-8 framing on frame one,
-   staring at empty sky above a two-storey stub.
+Two bugs from that era are still worth knowing, because both are easy to
+reintroduce anywhere on this site:
+
+1. **A staggered reveal must be normalised so the last item finishes at 1.**
+   Spacing items at `index / count` meant the top floor started at 0.944 and
+   needed until 1.11 to complete — so the top three storeys were permanently
+   unfinished, showing as short columns hanging in mid-air.
 2. **Concrete must be far lighter than instinct suggests** on a near-black
-   ground (`#59544c` / `#736c62`). The first pass reused the old `#2a2622` and
-   the tower vanished into the page.
-3. `WebGLBoundary`'s `display: contents`, above.
+   ground (`#59544c` / `#736c62`). Reusing the old `#2a2622` made the tower
+   vanish into the page.
 
-The hero's H1, lead copy and CTAs are untouched server-rendered markup — this is
-the SEO and RERA guarantee. The 36-frame photo sequence is retained as the
-designed fallback, cross-faded via a new `dimmed` prop.
+The hero's H1, lead copy and CTAs remain untouched markup — that is the SEO and
+RERA guarantee, and it held through all four versions.
 
 ---
 
@@ -285,7 +296,12 @@ file and which two are deliberately unused.
   `<WebGLBoundary>`.
 - **Never allocate inside `useFrame`.** Scratch `Vector3`/`Matrix4`/`Quaternion`
   at module scope and recycle. `CLAUDE.md` §7 is explicit and
-  `tower-construction.tsx` follows it strictly.
+  `components/three/city-block-tour.tsx` follows it strictly.
+- **Measure a GLB before placing it** — `node scripts/measure-glb.mjs <file>`.
+  It transforms every primitive's bounding box through its full node chain and
+  reports world size, grounding, footprint ratio and emissive materials. Reading
+  raw accessor `min`/`max` instead is what produced a wrong "these are Z-up"
+  diagnosis and a correction that turned every building upside down.
 - Framer Motion is used through `<LazyMotion strict>` — import `m`, never
   `motion`, or it throws at runtime.
 - Next 16 specifics: globally-injected `LayoutProps<"/">` / `PageProps<"/x/[y]">`

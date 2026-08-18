@@ -70,10 +70,11 @@ RERA disclosure, privacy, terms, 404.
 **3D** — four surfaces, every one layered over markup that already works without
 it, and all wrapped in `components/webgl-boundary.tsx`:
 
-- **Construction hero** (`components/three/tower-construction.tsx`) — an
-  18-storey tower assembling itself from pillars to lit windows across scroll,
-  ~1,300 instances in about ten draw calls, standing in a neighbourhood built
-  from the models in `public/glb`.
+- **City-block tour** (`components/three/city-block-tour.tsx`) — a scroll-driven
+  camera through `modern_city_block.glb`: an establishing orbit, a descent to
+  the rooftops, a push into the street, then a lift back out. Mounted behind an
+  IntersectionObserver with two viewports of lead time, because the model is
+  24 MB.
 - **Onboarding agent** (`components/onboarding/`) — a first-visit, skippable
   greeting. Client-only, so it never appears in the server HTML.
 - **Apartment walkthrough** (`components/projects/apartment-interior-scene.tsx`) —

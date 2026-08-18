@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Clone } from "@react-three/drei";
 import * as THREE from "three";
@@ -106,10 +106,20 @@ const BLOCK_HEIGHT = 18;
 export function CityBlockTour({
   progress,
   tier,
+  onReady,
 }: {
   /** 0→1 scroll position, sampled in the frame that draws it. */
   progress: RefObject<number>;
   tier: QualityTier;
+  /**
+   * Fired once the model is actually loaded and this component has mounted.
+   *
+   * `useGLTF` suspends, so nothing below it — including the effect that calls
+   * this — can run until all 24 MB has arrived and parsed. That makes mounting
+   * a trustworthy "the scene is about to draw" signal, which is what the
+   * section needs before it dares to take its fallback photograph away.
+   */
+  onReady?: () => void;
 }) {
   const { camera } = useThree();
   const look = usePointerLook({ lambda: 2.5, strength: 1 });
@@ -126,6 +136,14 @@ export function CityBlockTour({
     envMapIntensity: 1.1,
     emissiveScale: 0.8,
   });
+
+  /* One frame of grace before declaring readiness, so the section's cross-fade
+     starts against a canvas that has actually painted rather than a cleared one. */
+  useEffect(() => {
+    if (!onReady) return;
+    const frame = requestAnimationFrame(() => onReady());
+    return () => cancelAnimationFrame(frame);
+  }, [onReady]);
 
   const groupRef = useRef<THREE.Group>(null);
 

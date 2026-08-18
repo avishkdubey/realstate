@@ -52,9 +52,10 @@ type Placement = {
  * silhouettes overlap, which is what creates the sense of a place continuing
  * past what you can see.
  */
-/* Same re-tune as SITE_SURROUNDS: these were authored against buildings that
-   were buried to roughly half height, so standing them up honestly needs the
-   numbers brought back down or the view from the flat becomes a wall. */
+/* Heights are set against honest grounding. They were once authored ~2× too
+   large to compensate for every building being buried to roughly half its
+   nominal height; once the grounding was fixed they had to come back down or
+   the view from the flat becomes a wall. */
 const SKYLINE: Placement[] = [
   { asset: "cityBlock", position: [8, 0, -46], height: 16, rotationY: -0.35 },
   { asset: "apartmentHouse", position: [-22, 0, -58], height: 21, rotationY: 0.2 },
@@ -63,77 +64,6 @@ const SKYLINE: Placement[] = [
   { asset: "apartmentHouse", position: [38, 0, -95], height: 32, rotationY: 0.8 },
   { asset: "apartmentHouse", position: [-42, 0, -104], height: 24, rotationY: 1.7 },
 ];
-
-/**
- * The city around the construction site, for the home hero.
- *
- * This is the difference between "a tower" and "a tower being built somewhere".
- * A massing model alone on a ground plane reads as a diagram no matter how well
- * it is lit — what makes it read as real is context: neighbours at varied
- * heights, set back at varied distances, receding into haze. The eye judges
- * scale by comparison, and with nothing to compare against there is no scale.
- *
- * The ring is deliberately open toward the camera's arc so the tower is never
- * occluded, and it leans on the untextured model for everything but the two
- * nearest slots, where detail is actually resolvable.
- */
-/* Heights are re-tuned against honest grounding. Before the fix above, every
-   building was sunk to roughly half its nominal height, so these numbers were
-   authored ~2× too large to compensate. Standing them on the ground without
-   re-tuning would have left the tower — 20.7 units — as the *shortest* thing
-   in its own hero shot.
-
-   The rule now: nothing in the near or middle ground exceeds ~16, so the
-   subject is unambiguously the tallest thing in frame; the far skyline is
-   allowed 22–28 because fog and distance already read it as smaller. */
-/* Re-composed once the models stood up.
- *
- * Lying on their backs these sprawled across the frame and looked like a lot of
- * building. Upright and correctly grounded they are far smaller on screen —
- * `modern_apartment_house` is a squat block, ~32 × 34 in footprint for 26 of
- * height — so the previous ring, which sat 34 to 104 units out, put them beyond
- * the point where the eye registers them at all.
- *
- * So they come in: the nearest are now inside 30 units, where they read as
- * buildings rather than as texture, and the far rank is closer to the fog's
- * `near` of 45 so it stacks up in haze instead of dissolving entirely. Heights
- * stay under the tower's 20.7 in the near and middle ground — the subject has
- * to be the tallest thing in its own frame.
- */
-/* Note the absence of `cityBlock` here, which is deliberate and load-bearing.
-   That asset is 24 MB, and one placement of it put the whole file on the hero's
-   critical path — the hero rendered nothing at all for 5–10 seconds on a cold
-   load while it streamed. The untextured 2.4 MB model carries the same
-   silhouette at this distance for a tenth of the weight, and the difference is
-   invisible past about twenty units. `cityBlock` still earns its keep in the
-   city-block tour, where it is the subject, seen close, and loaded lazily well
-   below the fold. */
-const SITE_SURROUNDS: Placement[] = [
-  // Near neighbours, flanking the camera's arc without crossing it.
-  { asset: "apartmentHouse", position: [-26, 0, -20], height: 12, rotationY: 0.5 },
-  { asset: "apartmentHouse", position: [27, 0, -24], height: 14, rotationY: -0.7 },
-  // Middle distance.
-  { asset: "apartmentHouse", position: [-30, 0, -38], height: 17, rotationY: 1.3 },
-  { asset: "apartmentHouse", position: [30, 0, -44], height: 15, rotationY: 2.6 },
-  { asset: "apartmentHouse", position: [-6, 0, -50], height: 19, rotationY: 0.15 },
-  // Far skyline, stacking up in the haze.
-  { asset: "apartmentHouse", position: [44, 0, -66], height: 26, rotationY: 1.9 },
-  { asset: "apartmentHouse", position: [-48, 0, -74], height: 24, rotationY: 0.9 },
-  { asset: "apartmentHouse", position: [12, 0, -84], height: 30, rotationY: 2.2 },
-];
-
-export function CitySurrounds({ tier }: { tier: QualityTier }) {
-  const placements = useMemo(() => {
-    if (tier === "low") return [];
-    if (tier === "medium") {
-      return SITE_SURROUNDS.filter((p) => p.asset === "apartmentHouse").slice(0, 5);
-    }
-    return SITE_SURROUNDS;
-  }, [tier]);
-
-  if (placements.length === 0) return null;
-  return <Skyline placements={placements} />;
-}
 
 export function CityBackdrop({ tier }: { tier: QualityTier }) {
   /* Nothing outside the window on the weakest hardware. The interior is the
