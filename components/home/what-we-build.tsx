@@ -32,17 +32,32 @@ import { clamp01, smoothstep } from "@/lib/construction-stages";
  * worse than the document flow it replaces.
  *
  * ── IMAGERY ────────────────────────────────────────────────────────────────
- * `villas` and `weekend-homes` are Pexels photographs. The Pexels licence
- * permits commercial use and modification and requires no attribution, which
- * is why they are usable here at all — an image lifted from a search result is
- * a copyright exposure on a live builder's site.
+ * Five of the six are Pexels photographs, in `public/images/categories/`. The
+ * Pexels licence permits commercial use and modification and requires no
+ * attribution, which is the only reason they are usable here — an image lifted
+ * from a search result is a copyright exposure on a live builder's site.
  *
- * The remaining four are stand-ins from the client's own project photography.
- * **None of these six is a Kautilya villa or weekend home**, which is why the
- * section carries a representational-purpose line: under RERA §12 a photograph
- * implying the promoter built something they did not is a misleading statement
- * they are liable for, and a disclaimer does not waive that — it only stops the
- * page asserting something untrue in the first place.
+ * Each was downloaded and *looked at* before being chosen, which is not
+ * ceremony: the search results included a Toronto skyline with the CN Tower
+ * in it, a rustic wooden shack, a bridge construction site filed under "land
+ * development", and a worn apartment block with laundry hanging off the
+ * balconies. A recognisable foreign landmark on an Ahmedabad builder's page is
+ * worse than a generic stand-in, not better. Portrait-orientation images were
+ * rejected outright — these cards are 16:9, and a portrait photo crops to a
+ * meaningless horizontal band.
+ *
+ * **Elite Residences deliberately keeps the client's own render.** It is a real
+ * Kautilya project, it is higher quality than anything the stock search turned
+ * up for that category, and it carries no third-party licence and no §12
+ * question at all. Swapping it for generic European stock would be a downgrade
+ * on every axis that matters.
+ *
+ * None of the other five depicts a Kautilya building, which is why the section
+ * carries a representational-purpose line. Under RERA §12 a photograph implying
+ * the promoter built something they did not is a misleading statement they are
+ * liable for; the line does not waive that, it stops the page asserting
+ * something untrue in the first place. Replace these with real project
+ * photography as it becomes available and the line can go.
  *
  * To swap: replace the file at the `image` path. Nothing else moves.
  * ───────────────────────────────────────────────────────────────────────────
@@ -80,7 +95,7 @@ const PANELS: Panel[] = [
     title: "Value Residences",
     tagline: "Thoughtful living, smartly priced",
     body: "Efficient 2 and 3 BHK plans where every rupee is visible in the home rather than the brochure. Carpet area as RERA defines it, and a price published before you call.",
-    image: "/images/projects/one54-slider.webp",
+    image: "/images/categories/value-residences.webp",
     href: "/projects",
   },
   {
@@ -88,7 +103,7 @@ const PANELS: Panel[] = [
     title: "Commercial Offices & Retail",
     tagline: "Spaces that mean business",
     body: "Ground-floor retail and upper-floor offices sized for businesses that actually exist in this city — with parking counted honestly and power that holds.",
-    image: "/images/projects/kautilya-99.webp",
+    image: "/images/categories/commercial.webp",
     href: "/projects",
   },
   {
@@ -104,7 +119,7 @@ const PANELS: Panel[] = [
     title: "Residential Plots",
     tagline: "Your land, your beginning",
     body: "Titled, RERA-registered plots with roads, drainage and power in the ground before a single one is sold — so you build when you are ready, not when we are.",
-    image: "/images/projects/bird-view.webp",
+    image: "/images/categories/plots.webp",
     href: "/projects",
   },
 ];
@@ -250,8 +265,8 @@ export function WhatWeBuild() {
           {/* The stage. `perspective` here is what makes the Z translations on
               the cards foreshorten; without it they would merely scale. */}
           <div
-            className="absolute inset-0 flex items-center justify-center pt-[7vh]"
-            style={{ perspective: "1600px", perspectiveOrigin: "50% 45%" }}
+            className="absolute inset-0 flex items-center justify-center pt-[5vh]"
+            style={{ perspective: "1900px", perspectiveOrigin: "50% 45%" }}
           >
             {/* Sized from HEIGHT, not width, with the width following from the
                 aspect ratio.
@@ -264,9 +279,18 @@ export function WhatWeBuild() {
               className="relative"
               style={{
                 transformStyle: "preserve-3d",
-                height: "min(58svh, 620px)",
+                /* Height drives the box; width follows from the aspect ratio,
+                   clamped so it never runs to the screen edges.
+
+                   68svh rather than the 58 this started at. The first pass was
+                   tuned on a 674px-tall window, where the card came out 391px
+                   high and read as a thumbnail floating in a lot of empty
+                   ground. The copy block inside needs about 200px, so 68% still
+                   leaves comfortable room on a short laptop while filling the
+                   frame properly on anything taller. */
+                height: "min(68svh, 760px)",
                 aspectRatio: "16 / 9",
-                maxWidth: "88vw",
+                maxWidth: "92vw",
               }}
             >
               {/* Reserves the deck's box, so the absolutely positioned cards

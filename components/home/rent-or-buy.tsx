@@ -280,7 +280,12 @@ function Slider({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="mt-4 w-full"
+        /* Matched to `emi-calculator.tsx` exactly. Left unstyled, these
+           rendered with the browser's default blue thumb while the EMI
+           calculator's sliders — sitting on the same rail, two taps away —
+           were bronze. Two sets of identical-looking controls in two different
+           colours reads as one of them being broken. */
+        className="accent-bronze mt-3 h-1 w-full cursor-pointer appearance-none rounded-full bg-[var(--border)]"
       />
     </label>
   );
