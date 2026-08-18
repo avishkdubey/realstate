@@ -47,27 +47,6 @@ export type GlbAsset = {
 };
 
 export const GLB_CATALOG: Record<string, GlbAsset> = {
-  nightCity: {
-    path: "/glb/low_poly_night_city.glb",
-    /* Measured with `scripts/measure-glb.mjs`, which transforms every
-       primitive's bounding box through its full node chain — world size
-       195.5 × 82.0 × 172.6, sitting at y = 0.86. */
-    extent: 195.5,
-    sizeMB: 9.5,
-    triangles: 6076,
-    materials: 1,
-    textureMB: 9.4,
-    notes:
-      "The home hero. Already Y-up and grounded, so it needs no correction. " +
-      "Almost all of its 9.5 MB is texture — 6k triangles across a single " +
-      "material, which is one draw call for an entire skyline. Its one material " +
-      "is fully emissive (factor [1,1,1] plus an emissive map), i.e. the night " +
-      "lighting is baked, so this is the one model here that is NOT graded " +
-      "toward the page ground and whose emissives are left at full strength. " +
-      "Scene lights therefore do very little; the atmosphere comes from the " +
-      "background, the fog and the bloom pass. It is also not modelled about " +
-      "its own centre (x runs −121 → +74), so the hero recentres it.",
-  },
   cityPack: {
     path: "/glb/city_pack.glb",
     extent: 1254882,
